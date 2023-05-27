@@ -40,6 +40,7 @@ namespace AssetRipper.IO.Files
 
 		public void AddSerializedFile(SerializedFile file)
 		{
+			file.SourceBaseDirectory = SourceBaseDirectory;
 			m_serializedFiles.Add(file);
 			OnSerializedFileAdded(file);
 		}
@@ -52,6 +53,7 @@ namespace AssetRipper.IO.Files
 
 		public void AddResourceFile(ResourceFile resource)
 		{
+			resource.SourceBaseDirectory = SourceBaseDirectory;
 			m_resourceFiles.Add(resource);
 			OnResourceFileAdded(resource);
 		}
