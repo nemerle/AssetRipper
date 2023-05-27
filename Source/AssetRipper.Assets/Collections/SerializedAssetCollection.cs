@@ -59,6 +59,7 @@ public sealed class SerializedAssetCollection : AssetCollection
 			Platform = file.Platform,
 			Flags = file.Flags,
 			EndianType = file.EndianType,
+			FilePath = file.FilePath
 		};
 		FileIdentifier[] fileDependencies = file.Metadata.Externals;
 		if (fileDependencies.Length > 0)

@@ -14,6 +14,9 @@ namespace AssetRipper.IO.Files
 		}
 
 		public string FilePath { get; set; } = string.Empty;
+		public string SourceBaseDirectory { get; set; } = string.Empty;
+		public string PathInSource => FilePath.Substring(SourceBaseDirectory.Length);
+
 		public string Name
 		{
 			get => name;

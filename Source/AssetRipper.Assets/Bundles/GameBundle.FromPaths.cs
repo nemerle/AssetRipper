@@ -11,6 +11,7 @@ namespace AssetRipper.Assets.Bundles;
 
 partial class GameBundle
 {
+	public string CommonPrefix { get; private set; } = string.Empty;
 	public void InitializeFromPaths(IEnumerable<string> paths, AssetFactoryBase assetFactory, IDependencyProvider dependencyProvider, IResourceProvider resourceProvider)
 	{
 		ResourceProvider = resourceProvider;
@@ -18,6 +19,7 @@ partial class GameBundle
 
 		while (fileStack.Count > 0)
 		{
+			fileStack.Last().SourceBaseDirectory = CommonPrefix;
 			switch (RemoveLastItem(fileStack))
 			{
 				case SerializedFile serializedFile:
@@ -102,5 +104,10 @@ partial class GameBundle
 				files.Add(dependency);
 			}
 		}
+	}
+
+	public void SetCommonPrefix(string commonPrefix)
+	{
+		CommonPrefix = commonPrefix;
 	}
 }

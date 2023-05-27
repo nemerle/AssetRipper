@@ -59,6 +59,7 @@ namespace AssetRipper.Processing
 		private ITagManager? tagManager;
 		private readonly BundledAssetsExportMode bundledAssetsExportMode;
 		private AnimationCache? currentAnimationCache;
+		private string _currentBundlePrefix;
 
 		public EditorFormatProcessor(BundledAssetsExportMode bundledAssetsExportMode)
 		{
@@ -108,7 +109,7 @@ namespace AssetRipper.Processing
 					terrain.ConvertToEditorFormat();
 					break;
 				case IAssetBundle assetBundle:
-					SetOriginalPaths(assetBundle, bundledAssetsExportMode);
+					SetOriginalPaths(assetBundle, bundledAssetsExportMode, _currentBundlePrefix);
 					break;
 				case IGraphicsSettings graphicsSettings:
 					graphicsSettings.ConvertToEditorFormat();
@@ -126,7 +127,7 @@ namespace AssetRipper.Processing
 					navMeshSettings.ConvertToEditorFormat();
 					break;
 				case IResourceManager resourceManager:
-					SetOriginalPaths(resourceManager);
+					SetOriginalPaths(resourceManager,_currentBundlePrefix);
 					break;
 				case IPlayerSettings playerSettings:
 					playerSettings.AllowUnsafeCode_C129 = true;
@@ -134,7 +135,7 @@ namespace AssetRipper.Processing
 			}
 		}
 
-		private static void SetOriginalPaths(IResourceManager manager)
+		private static void SetOriginalPaths(IResourceManager manager,string currentBundlePrefix)
 		{
 			foreach (AccessPairBase<Utf8String, IPPtr_Object> kvp in manager.Container_C147)
 			{
@@ -170,10 +171,12 @@ namespace AssetRipper.Processing
 		/// </remarks>
 		/// <param name="bundle"></param>
 		/// <exception cref="Exception"></exception>
-		private static void SetOriginalPaths(IAssetBundle bundle, BundledAssetsExportMode bundledAssetsExportMode)
+		private static void SetOriginalPaths(IAssetBundle bundle, BundledAssetsExportMode bundledAssetsExportMode, string currentBundlePrefix)
 		{
 			string bundleName = bundle.GetAssetBundleName();
 			string bundleDirectory = bundleName + DirectorySeparator;
+			string bundle_collection_suffix = bundle.Collection.FilePath.Substring(currentBundlePrefix.Length);
+			bundle_collection_suffix = Path.GetDirectoryName(bundle_collection_suffix) + Path.DirectorySeparatorChar+ Path.GetFileNameWithoutExtension(bundle_collection_suffix);
 			string directory = Path.Combine(AssetBundleFullPath, bundleName);
 			foreach (AccessPairBase<Utf8String, IAssetInfo> kvp in bundle.Container_C142)
 			{
@@ -223,6 +226,20 @@ namespace AssetRipper.Processing
 							assetPath = assetPath.Substring(bundleDirectory.Length);
 						}
 						asset.OriginalPath = Path.Combine(directory, assetPath);
+						break;
+					case BundledAssetsExportMode.PrefixByBundleName:
+						string prefix = Path.Combine(AssetsDirectory, bundle_collection_suffix);
+						if (assetPath.StartsWith(AssetsDirectory, StringComparison.OrdinalIgnoreCase))
+						{
+							assetPath = assetPath.Substring(AssetsDirectory.Length);
+						}
+
+						if (assetPath.StartsWith(bundleDirectory, StringComparison.OrdinalIgnoreCase))
+						{
+							assetPath = assetPath.Substring(bundleDirectory.Length);
+						}
+
+						asset.OriginalPath = Path.Combine(prefix, assetPath);
 						break;
 					case BundledAssetsExportMode.GroupByAssetType:
 						break;

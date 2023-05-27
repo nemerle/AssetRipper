@@ -77,7 +77,10 @@ namespace AssetRipper.Import.Structure
 				filePaths = PlatformStructure.Files.Values.Union(MixedStructure.Files.Values);
 			}
 
+			var commonPrefix = new string(filePaths.First().Substring(0, filePaths.Min(s => s.Length)).TakeWhile((c, i) => filePaths.All(s => s[i] == c)).ToArray());
+
 			FileCollection = new();
+			FileCollection.SetCommonPrefix(commonPrefix);
 			FileCollection.InitializeFromPaths(
 				filePaths,
 				assetFactory,
