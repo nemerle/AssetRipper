@@ -71,13 +71,10 @@ namespace AssetRipper.Import.Structure.Assembly.Managers
 			{
 				return result;
 			}
-			else
-			{
-				MemoryStream memoryStream = new();
-				assembly.WriteManifest(memoryStream);
-				m_assemblyStreams.Add(assembly, memoryStream);
-				return memoryStream;
-			}
+			MemoryStream memoryStream = new();
+			assembly.WriteManifest(memoryStream);
+			m_assemblyStreams.Add(assembly, memoryStream);
+			return memoryStream;
 		}
 
 		public void ClearStreamCache()
@@ -133,10 +130,8 @@ namespace AssetRipper.Import.Structure.Assembly.Managers
 			{
 				return false;
 			}
-			else
-			{
-				return FindType(scriptID.Assembly, scriptID.Namespace, scriptID.Name) != null;
-			}
+
+			return FindType(scriptID.Assembly, scriptID.Namespace, scriptID.Name) != null;
 		}
 
 		public virtual bool IsValid(ScriptIdentifier scriptID)

@@ -11,12 +11,14 @@ namespace AssetRipper.IO.Files.Converters
 			{
 				origin.EnableTypeTree = true;
 			}
-			if (generation >= FormatVersion.RefactorTypeData)
+            if (generation < FormatVersion.RefactorTypeData) 
+            {
+                return;
+            }
+
+            foreach (var ob in origin.Object)
 			{
-				for (int i = 0; i < origin.Object.Length; i++)
-				{
-					origin.Object[i].Initialize(origin.Types);
-				}
+                ob.Initialize(origin.Types);
 			}
 		}
 	}

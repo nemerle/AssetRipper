@@ -68,16 +68,14 @@ public static class FieldQuery
 		{
 			return Array.Empty<TypeSignature>();
 		}
-		else
+
+		GenericContext genericContext = new GenericContext(new GenericArgumentsProvider(derivedTypeArguments), null);
+		TypeSignature[] newBaseTypeArguments = new TypeSignature[baseTypeArguments.Count];
+		for (int i = 0; i < newBaseTypeArguments.Length; i++)
 		{
-			GenericContext genericContext = new GenericContext(new GenericArgumentsProvider(derivedTypeArguments), null);
-			TypeSignature[] newBaseTypeArguments = new TypeSignature[baseTypeArguments.Count];
-			for (int i = 0; i < newBaseTypeArguments.Length; i++)
-			{
-				newBaseTypeArguments[i] = baseTypeArguments[i].InstantiateGenericTypes(genericContext);
-			}
-			return newBaseTypeArguments;
+			newBaseTypeArguments[i] = baseTypeArguments[i].InstantiateGenericTypes(genericContext);
 		}
+		return newBaseTypeArguments;
 	}
 
 	private sealed record class GenericArgumentsProvider(IList<TypeSignature> TypeArguments) : IGenericArgumentsProvider

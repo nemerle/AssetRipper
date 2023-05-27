@@ -90,20 +90,18 @@ namespace AssetRipper.Import.Structure.Assembly
 			{
 				return monoScript.PropertiesHash_C115_Hash128;
 			}
-			else
+
+			Span<byte> hash = stackalloc byte[4];
+			BinaryPrimitives.WriteUInt32LittleEndian(hash, monoScript.PropertiesHash_C115_UInt32);
+			//I have reason to believe that this depends on the endianness of the file containing the MonoScript
+			//Might need to have a special case for big endian files, so that the hash matches SerializedType
+			return new()
 			{
-				Span<byte> hash = stackalloc byte[4];
-				BinaryPrimitives.WriteUInt32LittleEndian(hash, monoScript.PropertiesHash_C115_UInt32);
-				//I have reason to believe that this depends on the endianness of the file containing the MonoScript
-				//Might need to have a special case for big endian files, so that the hash matches SerializedType
-				return new()
-				{
-					Bytes__0 = hash[0],
-					Bytes__1 = hash[1],
-					Bytes__2 = hash[2],
-					Bytes__3 = hash[3],
-				};
-			}
+				Bytes__0 = hash[0],
+				Bytes__1 = hash[1],
+				Bytes__2 = hash[2],
+				Bytes__3 = hash[3],
+			};
 		}
 	}
 }

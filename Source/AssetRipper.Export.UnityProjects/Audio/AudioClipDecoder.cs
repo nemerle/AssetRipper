@@ -11,7 +11,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 	{
 		public static bool CanDecode(IAudioClip audioClip)
 		{
-			byte[] rawData = audioClip.GetAudioData();
+			var rawData = audioClip.GetAudioData();
 			if (rawData.Length == 0)
 			{
 				Logger.Info(LogCategory.Export, $"Can't decode audio clip '{audioClip.NameString}' with default decoder because its audio data could not be found.");

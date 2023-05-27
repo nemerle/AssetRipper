@@ -8,7 +8,7 @@ public sealed class SerializableTypelessData : SerializableEntry
 	public override JsonNode? Read(ref EndianSpanReader reader)
 	{
 		int size = reader.ReadInt32();
-		byte[] data = reader.ReadBytes(size);
+		var data = reader.ReadBytes(size);
 		if (data.Length != size)
 		{
 			throw new EndOfStreamException();

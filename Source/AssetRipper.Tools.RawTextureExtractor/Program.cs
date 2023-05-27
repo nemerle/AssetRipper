@@ -96,7 +96,7 @@ namespace AssetRipper.Tools.RawTextureExtractor
 			Directory.CreateDirectory(collectionOutputPath);
 			foreach (ITexture2D texture in collection.OfType<ITexture2D>())
 			{
-				byte[] data = texture.GetImageData();
+				var data = texture.GetImageData();
 				if (data.Length > 0)
 				{
 					string originalName = texture.NameString;

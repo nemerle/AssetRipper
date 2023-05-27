@@ -42,7 +42,7 @@ namespace AssetRipper.Export.UnityProjects
 			if (mesh.Has_StreamData_C43())
 			{
 				ulong offset = mesh.StreamData_C43.GetOffset();
-				byte[] path = mesh.StreamData_C43.Path.Data;
+				var path = mesh.StreamData_C43.Path.Data;
 				uint size = mesh.StreamData_C43.Size;
 				if (mesh.VertexData_C43 is not null && mesh.VertexData_C43.Data.Length == 0 && mesh.StreamData_C43.IsSet())
 				{
@@ -77,7 +77,7 @@ namespace AssetRipper.Export.UnityProjects
 			if (texture.Has_StreamData_C28())
 			{
 				ulong offset = texture.StreamData_C28.GetOffset();
-				byte[] path = texture.StreamData_C28.Path.Data;
+				var path = texture.StreamData_C28.Path.Data;
 				uint size = texture.StreamData_C28.Size;
 				if (texture.ImageData_C28.Length == 0 && texture.StreamData_C28.IsSet())
 				{
@@ -109,7 +109,7 @@ namespace AssetRipper.Export.UnityProjects
 			if (texture.Has_StreamData_C117())
 			{
 				ulong offset = texture.StreamData_C117.GetOffset();
-				byte[] path = texture.StreamData_C117.Path.Data;
+				var path = texture.StreamData_C117.Path.Data;
 				uint size = texture.StreamData_C117.Size;
 				if (texture.ImageData_C117.Length == 0 && texture.StreamData_C117.IsSet())
 				{
@@ -141,7 +141,7 @@ namespace AssetRipper.Export.UnityProjects
 			if (texture.Has_StreamData_C187())
 			{
 				ulong offset = texture.StreamData_C187.GetOffset();
-				byte[] path = texture.StreamData_C187.Path.Data;
+				var path = texture.StreamData_C187.Path.Data;
 				uint size = texture.StreamData_C187.Size;
 				if (texture.ImageData_C187.Length == 0 && texture.StreamData_C187.IsSet())
 				{
@@ -173,7 +173,7 @@ namespace AssetRipper.Export.UnityProjects
 			if (texture.Has_StreamData_C188())
 			{
 				ulong offset = texture.StreamData_C188.GetOffset();
-				byte[] path = texture.StreamData_C188.Path.Data;
+				var path = texture.StreamData_C188.Path.Data;
 				uint size = texture.StreamData_C188.Size;
 				if (texture.ImageData_C188.Length == 0 && texture.StreamData_C188.IsSet())
 				{

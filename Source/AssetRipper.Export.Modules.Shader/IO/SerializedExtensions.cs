@@ -94,9 +94,9 @@ namespace AssetRipper.Export.Modules.Shaders.IO
 			writer.WriteIndent(3);
 			writer.Write("Program \"{0}\" {{\n", type.ToProgramTypeString());
 			int tierCount = _this.GetTierCount();
-			for (int i = 0; i < _this.SubPrograms.Count; i++)
+            foreach (var sp in _this.SubPrograms)
 			{
-				_this.SubPrograms[i].Export(writer, type, tierCount > 1);
+                sp.Export(writer, type, tierCount > 1);
 			}
 			writer.WriteIndent(3);
 			writer.Write("}\n");
@@ -290,35 +290,34 @@ namespace AssetRipper.Export.Modules.Shaders.IO
 				writer.Write('\n');
 			}
 
-			if (!_this.ColMaskValue().IsRBGA())
+            if (_this.ColMaskValue().IsRBGA()) 
+                return;
+			writer.WriteIndent(3);
+			writer.Write("ColorMask ");
+			if (_this.ColMaskValue().IsNone())
 			{
-				writer.WriteIndent(3);
-				writer.Write("ColorMask ");
-				if (_this.ColMaskValue().IsNone())
-				{
-					writer.Write(0);
-				}
-				else
-				{
-					if (_this.ColMaskValue().IsRed())
-					{
-						writer.Write('R');
-					}
-					if (_this.ColMaskValue().IsGreen())
-					{
-						writer.Write('G');
-					}
-					if (_this.ColMaskValue().IsBlue())
-					{
-						writer.Write('B');
-					}
-					if (_this.ColMaskValue().IsAlpha())
-					{
-						writer.Write('A');
-					}
-				}
-				writer.Write(" {0}\n", index);
+				writer.Write(0);
 			}
+			else
+			{
+				if (_this.ColMaskValue().IsRed())
+				{
+					writer.Write('R');
+				}
+				if (_this.ColMaskValue().IsGreen())
+				{
+					writer.Write('G');
+				}
+				if (_this.ColMaskValue().IsBlue())
+				{
+					writer.Write('B');
+				}
+				if (_this.ColMaskValue().IsAlpha())
+				{
+					writer.Write('A');
+				}
+			}
+			writer.Write(" {0}\n", index);
 		}
 
 		public static void Export(this ISerializedShaderState _this, TextWriter writer)
