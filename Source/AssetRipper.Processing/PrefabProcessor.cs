@@ -1,10 +1,12 @@
-﻿using AssetRipper.Assets.Bundles;
+using AssetRipper.Assets.Bundles;
 using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.Generics;
+using AssetRipper.Import.Logging;
 using AssetRipper.SourceGenerated;
 using AssetRipper.SourceGenerated.Classes.ClassID_1;
 using AssetRipper.SourceGenerated.Classes.ClassID_1001;
 using AssetRipper.SourceGenerated.Classes.ClassID_18;
+using AssetRipper.SourceGenerated.Classes.ClassID_4;
 using AssetRipper.SourceGenerated.Extensions;
 using AssetRipper.SourceGenerated.MarkerInterfaces;
 using AssetRipper.SourceGenerated.Subclasses.PPtr_EditorExtension;
@@ -33,6 +35,14 @@ public sealed class PrefabProcessor : IAssetProcessor
 			if (gameObjects.Contains(asset))
 			{
 				continue;
+			}
+
+			var ic = asset.TryGetComponent<ITransform>();
+			if (ic == null)
+			{
+				Logger.Warning(LogCategory.Export, $"Failed to find a transform in a root object '{asset.Name}'");
+				var transform = processedCollection.CreateAsset((int)ClassIDType.Transform, TransformFactory.CreateAsset);
+				asset.AddComponent(ClassIDType.Transform, transform);
 			}
 
 			IGameObject root = asset.GetRoot();

@@ -164,6 +164,11 @@ namespace AssetRipper.SourceGenerated.Extensions
 		public static IGameObject GetRoot(this IGameObject gameObject)
 		{
 			ITransform root = gameObject.GetTransform();
+			if (root.Father_C4P is null)
+			{
+				return gameObject; // no parent -> the queried object is the root.
+			}
+
 			while (true)
 			{
 				ITransform? parent = root.Father_C4P;
