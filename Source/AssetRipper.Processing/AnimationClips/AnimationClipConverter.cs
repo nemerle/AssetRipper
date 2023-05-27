@@ -79,6 +79,7 @@ namespace AssetRipper.Processing.AnimationClips
 			float[] inSlopeValues = new float[4];
 			float[] outSlopeValues = new float[4];
 			float interval = 1.0f / sampleRate;
+			var fast_lookup = bindings.PrepareFastLookup();
 
 			// first (index [0]) stream frame is for slope calculation for the first real frame (index [1])
 			// last one (index [count - 1]) is +Infinity
@@ -90,7 +91,7 @@ namespace AssetRipper.Processing.AnimationClips
 				for (int curveIndex = 0; curveIndex < frame.Curves.Length;)
 				{
 					StreamedCurveKey curve = frame.Curves[curveIndex];
-					IGenericBinding binding = bindings.FindBinding(curve.Index);
+					IGenericBinding binding = bindings.FindBinding(fast_lookup, curve.Index);
 
 					string path = GetCurvePath(tos, binding.Path);
 					if (binding.IsTransform())
@@ -104,7 +105,7 @@ namespace AssetRipper.Processing.AnimationClips
 						int dimension = binding.TransformType().GetDimension();
 						for (int key = 0; key < dimension; key++)
 						{
-							StreamedCurveKey keyCurve = frame.Curves[curveIndex];//index out of bounds
+							StreamedCurveKey keyCurve = frame.Curves[curveIndex]; //index out of bounds
 							StreamedFrame prevFrame = streamFrames[prevFrameIndex];
 							StreamedCurveKey prevKeyCurve = prevFrame.Curves[prevCurveIndex + key];
 							float deltaTime = frame.Time - prevFrame.Time;
@@ -118,7 +119,11 @@ namespace AssetRipper.Processing.AnimationClips
 					}
 					else if (binding.CustomType == (byte)BindingCustomType.None)
 					{
-						if (frameIndex0) { curveIndex = GetNextCurve(frame, curveIndex); continue; }
+						if (frameIndex0)
+						{
+							curveIndex = GetNextCurve(frame, curveIndex);
+							continue;
+						}
 						AddDefaultCurve(binding, path, frame.Time, frame.Curves[curveIndex].Value);
 						curveIndex = GetNextCurve(frame, curveIndex);
 					}
@@ -140,6 +145,7 @@ namespace AssetRipper.Processing.AnimationClips
 			DenseClip dense = clip.DenseClip;
 			int streamCount = (int)clip.StreamedClip.CurveCount;
 			float[] slopeValues = new float[4]; // no slopes - 0 values
+			var fast_lookup = bindings.PrepareFastLookup();
 			for (int frameIndex = 0; frameIndex < dense.FrameCount; frameIndex++)
 			{
 				float time = frameIndex / dense.SampleRate;
@@ -147,7 +153,7 @@ namespace AssetRipper.Processing.AnimationClips
 				for (int curveIndex = 0; curveIndex < dense.CurveCount;)
 				{
 					int index = streamCount + curveIndex;
-					IGenericBinding binding = bindings.FindBinding(index);
+					IGenericBinding binding = bindings.FindBinding(fast_lookup, index);
 					string path = GetCurvePath(tos, binding.Path);
 					int framePosition = frameOffset + curveIndex;
 					if (binding.IsTransform())
@@ -174,7 +180,7 @@ namespace AssetRipper.Processing.AnimationClips
 			int streamCount = (int)clip.StreamedClip.CurveCount;
 			int denseCount = (int)clip.DenseClip.CurveCount;
 			float[] slopeValues = new float[4]; // no slopes - 0 values
-
+			var fast_lookup = bindings.PrepareFastLookup();
 			// only first and last frames
 			float time = 0.0f;
 			for (int i = 0; i < 2; i++, time += lastFrame)
@@ -182,7 +188,7 @@ namespace AssetRipper.Processing.AnimationClips
 				for (int curveIndex = 0; curveIndex < constant.Data.Length;)
 				{
 					int index = streamCount + denseCount + curveIndex;
-					IGenericBinding binding = bindings.FindBinding(index);
+					IGenericBinding binding = bindings.FindBinding(fast_lookup, index);
 					string path = GetCurvePath(tos, binding.Path);
 					if (binding.IsTransform())
 					{
