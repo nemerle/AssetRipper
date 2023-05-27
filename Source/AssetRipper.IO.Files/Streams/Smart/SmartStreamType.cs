@@ -16,4 +16,5 @@ public enum SmartStreamType
 	/// The <see cref="SmartStream"/> is backed by a <see cref="MemoryStream"/>.
 	/// </summary>
 	Memory,
+	MemMapped
 }

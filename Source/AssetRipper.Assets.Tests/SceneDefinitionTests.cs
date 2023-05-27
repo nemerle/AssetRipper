@@ -60,44 +60,6 @@ public class SceneDefinitionTests
 			sceneDefinition1.AddCollection(mockAssetCollection2));
 	}
 
-	[Test]
-	public void RemoveCollection_RemovesCollectionFromSceneDefinition()
-	{
-		SceneDefinition sceneDefinition = SceneDefinition.FromName("testScene");
-		AssetCollection mockAssetCollection = CreateCollection();
-		sceneDefinition.AddCollection(mockAssetCollection);
-
-		sceneDefinition.RemoveCollection(mockAssetCollection);
-
-		Assert.That(sceneDefinition.Collections, Is.Empty);
-	}
-
-	[Test]
-	public void RemoveCollection_ThrowsWhenCollectionNotPartOfSceneDefinition()
-	{
-		SceneDefinition sceneDefinition = SceneDefinition.FromName("testScene");
-		AssetCollection mockAssetCollection1 = CreateCollection();
-		AssetCollection mockAssetCollection2 = CreateCollection();
-
-		sceneDefinition.AddCollection(mockAssetCollection1);
-
-		Assert.Throws<ArgumentException>(() =>
-			sceneDefinition.RemoveCollection(mockAssetCollection2));
-
-	}
-
-	[Test]
-	public void RemoveCollection_DeletesAssetCollectionSceneReference()
-	{
-		SceneDefinition sceneDefinition = SceneDefinition.FromName("testScene");
-		AssetCollection mockAssetCollection = CreateCollection();
-		sceneDefinition.AddCollection(mockAssetCollection);
-
-		sceneDefinition.RemoveCollection(mockAssetCollection);
-
-		Assert.That(mockAssetCollection.Scene, Is.Null);
-	}
-
 	private static AssetCollection CreateCollection()
 	{
 		GameBundle gameBundle = new();

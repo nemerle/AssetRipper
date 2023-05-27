@@ -4,6 +4,7 @@
 		<IsTrimmable>true</IsTrimmable>
 		<OutputPath>..\Bins\Other\AssetRipper.IO.Files\$(Configuration)\</OutputPath>
 		<IntermediateOutputPath>..\Bins\obj\AssetRipper.IO.Files\$(Configuration)\</IntermediateOutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>

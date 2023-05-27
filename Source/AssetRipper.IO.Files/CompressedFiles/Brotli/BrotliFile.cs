@@ -11,7 +11,7 @@ namespace AssetRipper.IO.Files.CompressedFiles.Brotli
 
 		public override void Read(SmartStream stream)
 		{
-			byte[] buffer = ReadBrotli(stream);
+			var buffer = ReadBrotli(stream);
 			UncompressedFile = new ResourceFile(buffer, FilePath, Name);
 		}
 

@@ -40,7 +40,7 @@ public sealed class SerializablePrimitive : SerializableEntry
 	private static string ReadString(ref EndianSpanReader reader)
 	{
 		int size = reader.ReadInt32();
-		byte[] data = reader.ReadBytes(size);
+		var data = reader.ReadBytes(size);
 		if (data.Length != size)
 		{
 			throw new EndOfStreamException();
@@ -54,14 +54,10 @@ public sealed class SerializablePrimitive : SerializableEntry
 		string typeName = node.Type;
 		if (typeName == "string")
 		{
-			TransferMetaFlags metaFlags = list[index].MetaFlag;
-			index++;
-			ThrowIfIncorrectName(list[index], "Array");
-			index++;
-			ThrowIfIncorrectName(list[index], "size");
-			index++;
-			ThrowIfIncorrectName(list[index], "data");
-			index++;
+			TransferMetaFlags metaFlags = list[index++].MetaFlag;
+			ThrowIfIncorrectName(list[index++], "Array");
+			ThrowIfIncorrectName(list[index++], "size");
+			ThrowIfIncorrectName(list[index++], "data");
 			primitive = new SerializablePrimitive(PrimitiveType.String);
 			primitive.Align = metaFlags.IsAlignBytes() || metaFlags.IsAnyChildUsesAlignBytes();
 			return true;

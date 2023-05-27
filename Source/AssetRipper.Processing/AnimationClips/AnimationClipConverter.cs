@@ -47,27 +47,29 @@ namespace AssetRipper.Processing.AnimationClips
 
 		private void ProcessInner(AnimationCache animationCache)
 		{
-			if (m_clip.Has_MuscleClip_C74() && m_clip.Has_ClipBindingConstant_C74())
+            if (!m_clip.Has_MuscleClip_C74() || !m_clip.Has_ClipBindingConstant_C74())
 			{
-				IClip clip = m_clip.MuscleClip_C74.Clip.Data;
-				IAnimationClipBindingConstant bindings = m_clip.ClipBindingConstant_C74;
-				IReadOnlyDictionary<uint, string> tos = m_clip.FindTOS(animationCache);
+                return;
+            }
 
-				IReadOnlyList<StreamedFrame> streamedFrames = GenerateFramesFromStreamedClip(clip.StreamedClip);
-				float lastDenseFrame = clip.DenseClip.FrameCount / clip.DenseClip.SampleRate;
-				float lastSampleFrame = streamedFrames.Count > 1 ? streamedFrames[streamedFrames.Count - 2].Time : 0.0f;
-				float lastFrame = Math.Max(lastDenseFrame, lastSampleFrame);
+			IClip clip = m_clip.MuscleClip_C74.Clip.Data;
+			IAnimationClipBindingConstant bindings = m_clip.ClipBindingConstant_C74;
+			IReadOnlyDictionary<uint, string> tos = m_clip.FindTOS(animationCache);
 
-				ProcessStreams(streamedFrames, bindings, tos, clip.DenseClip.SampleRate);
-				ProcessDenses(clip, bindings, tos);
-				if (clip.Has_ConstantClip())
-				{
-					ProcessConstant(clip, clip.ConstantClip, bindings, tos, lastFrame);
-				}
-				if (m_clip.Has_MuscleClipInfo_C74())
-				{
-					m_clip.MuscleClipInfo_C74.Initialize(m_clip.MuscleClip_C74);
-				}
+			IReadOnlyList<StreamedFrame> streamedFrames = GenerateFramesFromStreamedClip(clip.StreamedClip);
+			float lastDenseFrame = clip.DenseClip.FrameCount / clip.DenseClip.SampleRate;
+			float lastSampleFrame = streamedFrames.Count > 1 ? streamedFrames[streamedFrames.Count - 2].Time : 0.0f;
+			float lastFrame = Math.Max(lastDenseFrame, lastSampleFrame);
+
+			ProcessStreams(streamedFrames, bindings, tos, clip.DenseClip.SampleRate);
+			ProcessDenses(clip, bindings, tos);
+			if (clip.Has_ConstantClip())
+			{
+				ProcessConstant(clip, clip.ConstantClip, bindings, tos, lastFrame);
+			}
+			if (m_clip.Has_MuscleClipInfo_C74())
+			{
+				m_clip.MuscleClipInfo_C74.Initialize(m_clip.MuscleClip_C74);
 			}
 		}
 
