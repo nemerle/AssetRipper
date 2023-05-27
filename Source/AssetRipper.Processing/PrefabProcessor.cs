@@ -42,6 +42,7 @@ public sealed class PrefabProcessor : IAssetProcessor
 			{
 				Logger.Warning(LogCategory.Export, $"Failed to find a transform in a root object '{asset.Name}'");
 				var transform = processedCollection.CreateAsset((int)ClassIDType.Transform, TransformFactory.CreateAsset);
+				transform.LocalScale_C4.SetValues(1,1,1);
 				asset.AddComponent(ClassIDType.Transform, transform);
 			}
 
