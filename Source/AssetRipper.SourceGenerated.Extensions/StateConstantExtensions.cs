@@ -16,43 +16,37 @@ namespace AssetRipper.SourceGenerated.Extensions
 			{
 				return default;
 			}
+			IBlendTreeNodeConstant node = stateConstant.GetBlendTree().NodeArray[nodeIndex].Data;
+			if (node.IsBlendTree())
+			{
+				return VirtualAnimationFactory.CreateBlendTree(file, controller, stateConstant, nodeIndex);
+			}
+			int clipIndex = -1;
+			if (stateConstant.Has_LeafInfoArray())
+			{
+				for (int i = 0; i < stateConstant.LeafInfoArray.Count; i++)
+				{
+					LeafInfoConstant leafInfo = stateConstant.LeafInfoArray[i];
+					int index = leafInfo.IDArray.IndexOf(node.ClipID);
+					if (index >= 0)
+					{
+						clipIndex = (int)leafInfo.IndexOffset + index;
+						break;
+					}
+				}
+			}
 			else
 			{
-				IBlendTreeNodeConstant node = stateConstant.GetBlendTree().NodeArray[nodeIndex].Data;
-				if (node.IsBlendTree())
-				{
-					return VirtualAnimationFactory.CreateBlendTree(file, controller, stateConstant, nodeIndex);
-				}
-				else
-				{
-					int clipIndex = -1;
-					if (stateConstant.Has_LeafInfoArray())
-					{
-						for (int i = 0; i < stateConstant.LeafInfoArray.Count; i++)
-						{
-							LeafInfoConstant leafInfo = stateConstant.LeafInfoArray[i];
-							int index = leafInfo.IDArray.IndexOf(node.ClipID);
-							if (index >= 0)
-							{
-								clipIndex = (int)leafInfo.IndexOffset + index;
-								break;
-							}
-						}
-					}
-					else
-					{
-						clipIndex = unchecked((int)node.ClipID);
-					}
+				clipIndex = unchecked((int)node.ClipID);
+			}
 
-					if (clipIndex == -1)
-					{
-						return default;
-					}
-					else
-					{
-						return controller.AnimationClips_C91P[clipIndex] as IMotion;//AnimationClip has inherited from Motion since Unity 4.
-					}
-				}
+			if (clipIndex == -1)
+			{
+				return default;
+			}
+			else
+			{
+				return controller.AnimationClips_C91P[clipIndex] as IMotion;//AnimationClip has inherited from Motion since Unity 4.
 			}
 		}
 

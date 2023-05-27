@@ -19,6 +19,8 @@ using AssetRipper.SourceGenerated.Subclasses.OffsetPtr_SelectorStateConstant;
 using AssetRipper.SourceGenerated.Subclasses.PPtr_AnimatorState;
 using AssetRipper.SourceGenerated.Subclasses.PPtr_AnimatorTransition;
 using AssetRipper.SourceGenerated.Subclasses.PPtr_MonoBehaviour;
+using AssetRipper.SourceGenerated.Subclasses.PPtr_State;
+using AssetRipper.SourceGenerated.Subclasses.PPtr_Transition;
 using AssetRipper.SourceGenerated.Subclasses.SelectorStateConstant;
 using AssetRipper.SourceGenerated.Subclasses.SelectorTransitionConstant;
 using AssetRipper.SourceGenerated.Subclasses.StateConstant;
@@ -143,6 +145,10 @@ namespace AssetRipper.SourceGenerated.Extensions
 						generatedStateMachine.States_C1107.AddNew().CopyValues(generatedStateMachine.Collection.ForceCreatePPtr(state));
 					}
 
+					if (state.Has_ParentStateMachine_C1102())
+					{
+						state.ParentStateMachine_C1102P= generatedStateMachine;
+					}
 					states.Add(state);
 				}
 			}
@@ -167,7 +173,26 @@ namespace AssetRipper.SourceGenerated.Extensions
 					IAnimatorStateTransition transition = CreateAnimatorStateTransition(virtualFile, stateMachine, states, controller.TOS_C91, transitionConstant);
 					if (state.Has_Transitions_C1102())
 					{
+						transition.SrcState_C1101P = state;
 						state.Transitions_C1102.AddNew().CopyValues(state.Collection.ForceCreatePPtr(transition));
+					}
+					else if(generatedStateMachine.Has_OrderedTransitions_C1107())
+					{
+						var srcstate = generatedStateMachine.Collection.ForceCreatePPtr(state);
+						var key = new PPtr_State();
+						key.FileID = srcstate.FileID;
+						key.PathID = srcstate.PathID;
+						transition.SrcState_C1101P = state;
+						if (generatedStateMachine.OrderedTransitions_C1107.ContainsKey(key) == false)
+						{
+							var value = new AssetList<PPtr_Transition>();
+							value.AddNew().CopyValues(state.Collection.ForceCreatePPtr(transition));
+							generatedStateMachine.OrderedTransitions_C1107.Add(key, value);
+						}
+						else
+						{
+							generatedStateMachine.OrderedTransitions_C1107[key].AddNew().CopyValues(state.Collection.ForceCreatePPtr(transition));
+						}
 					}
 				}
 			}
@@ -181,6 +206,28 @@ namespace AssetRipper.SourceGenerated.Extensions
 					ITransitionConstant transitionConstant = stateMachine.AnyStateTransitionConstantArray[i].Data;
 					IAnimatorStateTransition transition = CreateAnimatorStateTransition(virtualFile, stateMachine, states, controller.TOS_C91, transitionConstant);
 					generatedStateMachine.AnyStateTransitions_C1107.AddNew().CopyValues(generatedStateMachine.Collection.ForceCreatePPtr(transition));
+				}
+			}
+			else
+			{
+				// the any state transitions are stored in the ordered transitions from null state
+				for (int i = 0; i < stateMachine.AnyStateTransitionConstantArray.Count; i++)
+				{
+					ITransitionConstant transitionConstant = stateMachine.AnyStateTransitionConstantArray[i].Data;
+					IAnimatorStateTransition transition = CreateAnimatorStateTransition(virtualFile, stateMachine, states, controller.TOS_C91, transitionConstant);
+					var key = new PPtr_State();
+					key.FileID = 0;
+					key.PathID = 0;
+					if (generatedStateMachine.OrderedTransitions_C1107.ContainsKey(key) == false)
+					{
+						var value = new AssetList<PPtr_Transition>();
+						value.AddNew().CopyValues(generatedStateMachine.Collection.ForceCreatePPtr(transition));
+						generatedStateMachine.OrderedTransitions_C1107.Add(key, value);
+					}
+					else
+					{
+						generatedStateMachine.OrderedTransitions_C1107[key].AddNew().CopyValues(generatedStateMachine.Collection.ForceCreatePPtr(transition));
+					}
 				}
 			}
 
@@ -268,7 +315,14 @@ namespace AssetRipper.SourceGenerated.Extensions
 			generatedState.CycleOffsetParameterActive_C1102 = state.CycleOffsetParamID > 0;
 			generatedState.TimeParameterActive_C1102 = state.TimeParamID > 0;
 
-			generatedState.Motion_C1102P = state.CreateMotion(virtualFile, controller, 0);
+			if (generatedState.Has_Motions_C1102())
+			{
+				generatedState.Motions_C1102P.Add(state.CreateMotion(virtualFile, controller, 0));    
+			}
+			else
+			{
+				generatedState.Motion_C1102P = state.CreateMotion(virtualFile, controller, 0);
+			}
 
 			generatedState.Tag_C1102.CopyValues(TOS[state.TagID]);
 			generatedState.SpeedParameter_C1102?.CopyValues(TOS[state.SpeedParamID]);
@@ -293,12 +347,16 @@ namespace AssetRipper.SourceGenerated.Extensions
 			for (int i = 0; i < Transition.ConditionConstantArray.Count; i++)
 			{
 				ConditionConstant conditionConstant = Transition.ConditionConstantArray[i].Data;
+				IAnimatorCondition condition = animatorStateTransition.Conditions_C1101.AddNew();
+				condition.ConditionMode = (int)conditionConstant.GetConditionMode();
+				condition.EventTreshold = conditionConstant.EventThreshold;
 				if (conditionConstant.ConditionMode != (int)AnimatorConditionMode.ExitTime)
 				{
-					IAnimatorCondition condition = animatorStateTransition.Conditions_C1101.AddNew();
-					condition.ConditionMode = (int)conditionConstant.GetConditionMode();
 					condition.ConditionEvent.CopyValues(TOS[conditionConstant.EventID]);
-					condition.EventTreshold = conditionConstant.EventThreshold;
+				}
+				else
+				{
+					condition.ExitTime = conditionConstant.ExitTime;
 				}
 			}
 
@@ -317,6 +375,10 @@ namespace AssetRipper.SourceGenerated.Extensions
 			animatorStateTransition.InterruptionSource_C1101E = Transition.GetInterruptionSource();
 			animatorStateTransition.OrderedInterruption_C1101 = Transition.OrderedInterruption;
 			animatorStateTransition.CanTransitionToSelf_C1101 = Transition.CanTransitionToSelf;
+			if(animatorStateTransition.Has_Atomic_C1101())
+			{
+				animatorStateTransition.Atomic_C1101 = Transition.Atomic;
+			}
 
 			return animatorStateTransition;
 		}
@@ -367,7 +429,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 				else if (stateMachine.Has_SelectorStateConstantArray())
 				{
 					SelectorStateConstant selectorState = stateMachine.SelectorStateConstantArray[(int)stateIndex].Data;
-#warning		HACK: take default Entry destination. TODO: child StateMachines
+#warning HACK: take default Entry destination. TODO: child StateMachines
 					SelectorTransitionConstant selectorTransition = selectorState.TransitionConstantArray[^1].Data;
 					return GetDestinationState(selectorTransition.Destination, stateMachine, states);
 				}

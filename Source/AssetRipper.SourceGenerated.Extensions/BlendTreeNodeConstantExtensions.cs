@@ -33,7 +33,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 		public static float GetMinThreshold(this IBlendTreeNodeConstant constant)
 		{
-			if (constant.Has_Blend1dData() && constant.GetBlendType() == BlendTreeType.Simple1D)
+			if (constant.Has_Blend1dData() && constant.GetBlendType() == BlendTreeType.Simple1D && constant.Blend1dData.Data.ChildThresholdArray.Length > 0)
 			{
 				return constant.Blend1dData.Data.ChildThresholdArray.Min();
 			}
@@ -42,7 +42,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 		public static float GetMaxThreshold(this IBlendTreeNodeConstant constant)
 		{
-			if (constant.Has_Blend1dData() && constant.GetBlendType() == BlendTreeType.Simple1D)
+			if (constant.Has_Blend1dData() && constant.GetBlendType() == BlendTreeType.Simple1D && constant.Blend1dData.Data.ChildThresholdArray.Length > 0)
 			{
 				return constant.Blend1dData.Data.ChildThresholdArray.Max();
 			}

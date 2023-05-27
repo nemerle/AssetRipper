@@ -26,6 +26,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			IBlendTreeNodeConstant node = treeConstant.NodeArray[nodeIndex].Data;
 			int childNodeIndex = (int)node.ChildIndices[childIndex];
 			IMotion? motion = state.CreateMotion(file, controller, childNodeIndex);
+			childMotion.IsAnim = true;
 			childMotion.Motion.CopyValues(tree.Collection.ForceCreatePPtr(motion));
 
 			childMotion.Threshold = node.GetThreshold(childIndex);
