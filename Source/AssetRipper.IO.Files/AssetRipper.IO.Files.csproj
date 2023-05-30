@@ -14,7 +14,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\AssetRipper.IO.Endian\AssetRipper.IO.Endian.csproj" />
+	  <ProjectReference Include="..\AssetRipper.IO.Endian\AssetRipper.IO.Endian.csproj" />
 	</ItemGroup>
 
 </Project>

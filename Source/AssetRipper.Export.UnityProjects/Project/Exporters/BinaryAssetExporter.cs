@@ -2,6 +2,7 @@ using AssetRipper.Assets;
 using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.Export;
 using AssetRipper.Export.UnityProjects.Project.Collections;
+using AssetRipper.IO;
 using AssetRipper.IO.Files;
 
 namespace AssetRipper.Export.UnityProjects.Project.Exporters
@@ -46,6 +47,6 @@ namespace AssetRipper.Export.UnityProjects.Project.Exporters
 			return true;
 		}
 
-		protected static bool IsValidData(byte[]? data) => data != null && data.Length > 0;
+		protected static bool IsValidData(MemoryAreaAccessor? data) => data != null && data.Length > 0;
 	}
 }

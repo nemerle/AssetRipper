@@ -36,9 +36,9 @@ namespace AssetRipper.Export.UnityProjects.Miscellaneous
 
 		public override bool Export(IExportContainer container, IUnityObjectBase asset, string path)
 		{
-			if (TryGetData(asset, out byte[]? data))
+			if (TryGetData(asset, out ReadOnlySpan<byte> data))
 			{
-				File.WriteAllBytes(path, data);
+				File.WriteAllBytes(path, data.ToArray());
 				return true;
 			}
 			else
@@ -47,7 +47,7 @@ namespace AssetRipper.Export.UnityProjects.Miscellaneous
 			}
 		}
 
-		private static bool TryGetData(IUnityObjectBase clip, [NotNullWhen(true)] out byte[]? data)
+		private static bool TryGetData(IUnityObjectBase clip, [NotNullWhen(true)] out ReadOnlySpan<byte> data)
 		{
 			if (clip is IVideoClip329 videoClip329 && videoClip329.ExternalResources_C329.TryGetContent(videoClip329.Collection, out data))
 			{

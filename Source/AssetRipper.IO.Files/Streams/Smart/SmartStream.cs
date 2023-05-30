@@ -21,10 +21,6 @@ namespace AssetRipper.IO.Files.Streams.Smart
 			Assign(copy);
 		}
 
-		public static SmartStream OpenRead(string path)
-		{
-			return new SmartStream(MultiFileStream.OpenRead(path));
-		}
 
 		public static SmartStream CreateTemp()
 		{
@@ -190,7 +186,7 @@ namespace AssetRipper.IO.Files.Streams.Smart
 		{
 			null => SmartStreamType.Null,
 			MemoryStream => SmartStreamType.Memory,
-			FileStream or MultiFileStream => SmartStreamType.File,
+			FileStream  => SmartStreamType.File,
 			_ => throw new InvalidOperationException(),
 		};
 
@@ -199,13 +195,14 @@ namespace AssetRipper.IO.Files.Streams.Smart
 		/// </summary>
 		/// <returns>A new byte array.</returns>
 		[MemberNotNull(nameof(Stream))]
-		public byte[] ToArray()
+		public Stream RestartedStream()
 		{
 			ThrowIfNull();
 			return Stream switch
 			{
-				MemoryStream memoryStream => memoryStream.ToArray(),
-				_ => StreamToByteArray(Stream),
+				MemoryStream memoryStream => new MemoryStream(memoryStream.GetBuffer()),
+				//MultiFileStream mapStream => mapStream.currentToView(),
+				_ => new MemoryStream(StreamToByteArray(Stream)),
 			};
 
 			static byte[] StreamToByteArray(Stream stream)

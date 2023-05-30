@@ -2,6 +2,7 @@
 using AssetRipper.Assets.Export;
 using AssetRipper.Export.UnityProjects.Project.Collections;
 using AssetRipper.Export.UnityProjects.Project.Exporters;
+using AssetRipper.IO;
 using AssetRipper.SourceGenerated.Classes.ClassID_83;
 using AssetRipper.SourceGenerated.Extensions;
 using AssetRipper.SourceGenerated.Subclasses.StreamedResource;
@@ -20,18 +21,18 @@ namespace AssetRipper.Export.UnityProjects.Audio
 			IStreamedResource? resource = asset.Resource_C83;
 			if (resource is not null)
 			{
-				byte[] originalSource = resource.Source.Data;
+				MemoryAreaAccessor originalSource = resource.Source.Data;
 				ulong originalOffset = resource.Offset;
 				ulong originalSize = resource.Size;
-				if (resource.TryGetContent(asset.Collection, out byte[]? data))
+				if (resource.TryGetContent(asset.Collection, out ReadOnlySpan<byte> data))
 				{
 					string resPath = filePath + ".resS";
-					System.IO.File.WriteAllBytes(resPath, data);
+					System.IO.File.WriteAllBytes(resPath, data.ToArray());
 					resource.Source.String = System.IO.Path.GetRelativePath(dirPath, resPath);
 				}
 				else
 				{
-					resource.Source.Data = Array.Empty<byte>();
+					resource.Source.Data = MemoryAreaAccessor.Empty;
 					resource.Offset = 0;
 					resource.Size = 0;
 				}

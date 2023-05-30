@@ -1,5 +1,6 @@
 ﻿using AssetRipper.Export.Modules.Shaders.IO;
 using AssetRipper.Export.Modules.Shaders.ShaderBlob;
+using AssetRipper.IO;
 using AssetRipper.IO.Endian;
 using AssetRipper.VersionUtilities;
 
@@ -16,22 +17,21 @@ namespace AssetRipper.Export.Modules.Shaders.Exporters
 
 		public override void Export(ShaderWriter writer, ref ShaderSubProgram subProgram)
 		{
-			using MemoryStream memStream = new MemoryStream(subProgram.ProgramData);
-			using BinaryReader reader = new BinaryReader(memStream);
+            var area = MemoryAreaAccessor.FromSpan(subProgram.ProgramData);
+            var reader = new EndianReader(area,EndianType.LittleEndian);
 			if (HasBlob(writer.Version))
 			{
-				long position = reader.BaseStream.Position;
+				long position = area.Position;
 				uint fourCC = reader.ReadUInt32();
 				if (fourCC == MetalFourCC)
 				{
 					int offset = reader.ReadInt32();
-					reader.BaseStream.Position = position + offset;
+					area.Position = position + offset;
 				}
-				using EndianReader endReader = new EndianReader(reader.BaseStream, EndianType.LittleEndian);
-				EntryName = endReader.ReadStringZeroTerm();
+				EntryName = reader.ReadStringZeroTerm();
 			}
 
-			ExportText(writer, reader);
+            ExportText(writer, area.GetSpanTyped<char>());
 		}
 
 		public string? EntryName { get; private set; }

@@ -4,23 +4,9 @@ namespace AssetRipper.IO.Files.ResourceFiles
 {
 	public sealed class ResourceFile : FileBase
 	{
-		public ResourceFile(SmartStream stream, string filePath, string name)
+        public ResourceFile(MemoryAreaAccessor stream, string filePath, string name)
 		{
-			Stream = stream.CreateReference();
-			FilePath = filePath;
-			Name = name;
-		}
-
-		public ResourceFile(byte[] data, string filePath, string name, bool writable = true)
-		{
-			Stream = SmartStream.CreateMemory(data, 0, data.Length, writable);
-			FilePath = filePath;
-			Name = name;
-		}
-
-		public ResourceFile(string filePath, string name)
-		{
-			Stream = SmartStream.OpenRead(filePath);
+            MemoryView = stream.CreateSubAccessor();
 			FilePath = filePath;
 			Name = name;
 		}
@@ -35,28 +21,23 @@ namespace AssetRipper.IO.Files.ResourceFiles
 
 		public override string ToString() => Name;
 
-		protected override void Dispose(bool disposing)
-		{
-			base.Dispose(disposing);
-			Stream.Dispose();
-		}
 
-		public override void Read(SmartStream stream)
+        public override void Read(MemoryAreaAccessor stream)
 		{
 			throw new NotSupportedException();
 		}
 
 		public override void Write(Stream stream)
 		{
-			Stream.CopyTo(stream);
+            MemoryView.CopyTo(stream);
 		}
 
-		public override byte[] ToByteArray()
+        public override MemoryAreaAccessor ToCleanStream()
 		{
-			return Stream.ToArray();
+            return MemoryView.CloneClean();
 		}
 
-		public SmartStream Stream { get; }
+        public MemoryAreaAccessor? MemoryView { get; }
 
 		public const string ResourceFileExtension = ".resource";
 		public const string StreamingFileExtension = ".ress";

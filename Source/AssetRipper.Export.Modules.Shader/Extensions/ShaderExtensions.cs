@@ -1,5 +1,6 @@
 ﻿using AssetRipper.Assets.Collections;
 using AssetRipper.Export.Modules.Shaders.ShaderBlob;
+using AssetRipper.IO;
 using AssetRipper.SourceGenerated.Classes.ClassID_48;
 
 namespace AssetRipper.Export.Modules.Shaders.Extensions
@@ -41,7 +42,7 @@ namespace AssetRipper.Export.Modules.Shaders.Extensions
 			return Array.Empty<ShaderSubProgramBlob>();
 		}
 
-		private static ShaderSubProgramBlob[] UnpackSubProgramBlobs(AssetCollection shaderCollection, uint offset, uint compressedLength, uint decompressedLength, byte[] compressedBlob)
+		private static ShaderSubProgramBlob[] UnpackSubProgramBlobs(AssetCollection shaderCollection, uint offset, uint compressedLength, uint decompressedLength, MemoryAreaAccessor compressedBlob)
 		{
 			if (compressedBlob.Length == 0)
 			{
@@ -58,7 +59,7 @@ namespace AssetRipper.Export.Modules.Shaders.Extensions
 			}
 		}
 
-		private static ShaderSubProgramBlob[] UnpackSubProgramBlobs(AssetCollection shaderCollection, uint[] offsets, uint[] compressedLengths, uint[] decompressedLengths, byte[] compressedBlob)
+		private static ShaderSubProgramBlob[] UnpackSubProgramBlobs(AssetCollection shaderCollection, uint[] offsets, uint[] compressedLengths, uint[] decompressedLengths, MemoryAreaAccessor compressedBlob)
 		{
 			ShaderSubProgramBlob[] blobs = new ShaderSubProgramBlob[offsets.Length];
 			for (int i = 0; i < blobs.Length; i++)
@@ -72,7 +73,7 @@ namespace AssetRipper.Export.Modules.Shaders.Extensions
 			return blobs;
 		}
 
-		private static ShaderSubProgramBlob[] UnpackSubProgramBlobs(AssetCollection shaderCollection, uint[][] offsets, uint[][] compressedLengths, uint[][] decompressedLengths, byte[] compressedBlob)
+		private static ShaderSubProgramBlob[] UnpackSubProgramBlobs(AssetCollection shaderCollection, uint[][] offsets, uint[][] compressedLengths, uint[][] decompressedLengths, MemoryAreaAccessor compressedBlob)
 		{
 			ShaderSubProgramBlob[] blobs = new ShaderSubProgramBlob[offsets.Length];
 			for (int i = 0; i < blobs.Length; i++)

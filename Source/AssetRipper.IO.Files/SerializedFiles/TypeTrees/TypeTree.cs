@@ -6,7 +6,7 @@ namespace AssetRipper.IO.Files.SerializedFiles.TypeTrees;
 public abstract class TypeTree<T> : ITypeTree where T : ITypeTreeNode, new()
 {
 	public List<T> Nodes { get; } = new();
-	public byte[] StringBuffer { get; set; } = Array.Empty<byte>();
+    public MemoryAreaAccessor StringBuffer { get; set; } = MemoryAreaAccessor.Empty;
 
 	public ITypeTreeNode this[int index] => Nodes[index];
 

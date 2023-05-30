@@ -1,4 +1,5 @@
-﻿using AssetRipper.SourceGenerated.Subclasses.PackedBitVector_Int32;
+﻿using AssetRipper.IO;
+using AssetRipper.SourceGenerated.Subclasses.PackedBitVector_Int32;
 
 namespace AssetRipper.SourceGenerated.Extensions
 {
@@ -9,7 +10,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 		public static void CopyValuesFrom(this PackedBitVector_Int32 instance, PackedBitVector_Int32 source)
 		{
 			instance.NumItems = source.NumItems;
-			instance.Data = source.Data.ToArray();
+			instance.Data = source.Data.CopyDeep();
 			instance.BitSize = source.BitSize;
 		}
 
@@ -26,16 +27,17 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 			packedVector.NumItems = (uint)data.Length;
 			packedVector.BitSize = maxDataValue == 0xFFFFFFFF ? (byte)32 : GetBitCount(maxDataValue + 1U);
-			packedVector.Data = new byte[(data.Length * packedVector.BitSize + 7) / 8];
+			packedVector.Data = new MemoryAreaAccessor((data.Length * packedVector.BitSize + 7) / 8);
 
 			int bitIndex = 0;
 			int byteIndex = 0;
+			var dest = packedVector.Data.WriteableSpan();
 			for (int i = 0; i < data.Length; i++)
 			{
 				int bitOffset = 0;
 				while (bitOffset < packedVector.BitSize)
 				{
-					packedVector.Data[byteIndex] |= unchecked((byte)(data[i] >> bitOffset << bitIndex));
+					dest[byteIndex] |= unchecked((byte)(data[i] >> bitOffset << bitIndex));
 					int read = Math.Min(packedVector.BitSize - bitOffset, 8 - bitIndex);
 					bitIndex += read;
 					bitOffset += read;
@@ -61,7 +63,8 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 			packedVector.NumItems = (uint)data.Length;
 			packedVector.BitSize = maxDataValue == 0xFFFFFFFF ? (byte)32 : GetBitCount(maxDataValue + 1U);
-			packedVector.Data = new byte[(data.Length * packedVector.BitSize + 7) / 8];
+			packedVector.Data = new MemoryAreaAccessor((data.Length * packedVector.BitSize + 7) / 8);
+			var dest = packedVector.Data.WriteableSpan();
 
 			int bitIndex = 0;
 			int byteIndex = 0;
@@ -70,7 +73,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 				int bitOffset = 0;
 				while (bitOffset < packedVector.BitSize)
 				{
-					packedVector.Data[byteIndex] |= unchecked((byte)(data[i] >> bitOffset << bitIndex));
+					dest[byteIndex] |= unchecked((byte)(data[i] >> bitOffset << bitIndex));
 					int read = Math.Min(packedVector.BitSize - bitOffset, 8 - bitIndex);
 					bitIndex += read;
 					bitOffset += read;
@@ -88,13 +91,14 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int bitIndex = 0;
 			int byteIndex = 0;
 			int[] buffer = new int[packedVector.NumItems];
+			var src = packedVector.Data.GetSpan();
 			for (int i = 0; i < packedVector.NumItems; i++)
 			{
 				int bitOffset = 0;
 				buffer[i] = 0;
 				while (bitOffset < packedVector.BitSize)
 				{
-					buffer[i] |= packedVector.Data[byteIndex] >> bitIndex << bitOffset;
+					buffer[i] |= src[byteIndex] >> bitIndex << bitOffset;
 					int read = Math.Min(packedVector.BitSize - bitOffset, 8 - bitIndex);
 					bitIndex += read;
 					bitOffset += read;
@@ -114,13 +118,14 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int bitIndex = 0;
 			int byteIndex = 0;
 			uint[] buffer = new uint[packedVector.NumItems];
+			var src = packedVector.Data.GetSpan();
 			for (int i = 0; i < packedVector.NumItems; i++)
 			{
 				int bitOffset = 0;
 				buffer[i] = 0;
 				while (bitOffset < packedVector.BitSize)
 				{
-					buffer[i] |= unchecked((uint)(packedVector.Data[byteIndex] >> bitIndex << bitOffset));
+					buffer[i] |= unchecked((uint)(src[byteIndex] >> bitIndex << bitOffset));
 					int read = Math.Min(packedVector.BitSize - bitOffset, 8 - bitIndex);
 					bitIndex += read;
 					bitOffset += read;
@@ -140,13 +145,14 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int bitIndex = 0;
 			int byteIndex = 0;
 			ushort[] buffer = new ushort[packedVector.NumItems];
+			var src = packedVector.Data.GetSpan();
 			for (int i = 0; i < packedVector.NumItems; i++)
 			{
 				int bitOffset = 0;
 				buffer[i] = 0;
 				while (bitOffset < packedVector.BitSize)
 				{
-					buffer[i] |= unchecked((ushort)(packedVector.Data[byteIndex] >> bitIndex << bitOffset));
+					buffer[i] |= unchecked((ushort)(src[byteIndex] >> bitIndex << bitOffset));
 					int read = Math.Min(packedVector.BitSize - bitOffset, 8 - bitIndex);
 					bitIndex += read;
 					bitOffset += read;

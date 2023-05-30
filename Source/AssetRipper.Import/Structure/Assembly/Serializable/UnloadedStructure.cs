@@ -6,6 +6,7 @@ using AssetRipper.Assets.IO.Writing;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.Import.Structure.Assembly.Managers;
 using AssetRipper.IO.Endian;
+using AssetRipper.IO;
 using AssetRipper.SourceGenerated.Classes.ClassID_114;
 using AssetRipper.Yaml;
 
@@ -27,9 +28,9 @@ internal sealed class UnloadedStructure : UnityAssetBase
 	/// <summary>
 	/// The segment of data for this structure.
 	/// </summary>
-	private readonly ReadOnlyArraySegment<byte> structureData;
+    private readonly MemoryAreaAccessor structureData;
 
-	public UnloadedStructure(IMonoBehaviour monoBehaviour, IAssemblyManager assemblyManager, ReadOnlyArraySegment<byte> structureData)
+    public UnloadedStructure(IMonoBehaviour monoBehaviour, IAssemblyManager assemblyManager, MemoryAreaAccessor structureData)
 	{
 		this.monoBehaviour = monoBehaviour;
 		this.assemblyManager = assemblyManager;
@@ -50,7 +51,7 @@ internal sealed class UnloadedStructure : UnityAssetBase
 		SerializableStructure? structure = monoBehaviour.Script_C114P?.GetBehaviourType(assemblyManager)?.CreateSerializableStructure();
 		if (structure is not null)
 		{
-			EndianSpanReader reader = new EndianSpanReader(structureData, monoBehaviour.Collection.EndianType);
+			EndianReader reader = new EndianReader(structureData, monoBehaviour.Collection.EndianType);
 			if (structure.TryRead(ref reader, monoBehaviour.Collection.Version, monoBehaviour.Collection.Flags))
 			{
 				monoBehaviour.Structure = structure;

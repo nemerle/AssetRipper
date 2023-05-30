@@ -23,7 +23,7 @@ public class SmartStreamTests
 		Assert.That(memoryStream.Length, Is.EqualTo(Length));
 	}
 
-	[Test]
+	/*[Test]
 	public void ToArrayMakesAPerfectCopyForMemorySmartStreams()
 	{
 		const int Length = 87;
@@ -31,7 +31,7 @@ public class SmartStreamTests
 		new Random(32).NextBytes(randomData);
 		SmartStream memoryStream = SmartStream.CreateMemory(randomData);
 		Assert.That(memoryStream.ToArray(), Is.EqualTo(randomData));
-	}
+	}*/
 
 	[Test]
 	public void FreedStreamsMustBeNull()
@@ -85,7 +85,7 @@ public class SmartStreamTests
 			Assert.Throws<NullReferenceException>(() => SmartStream.CreateNull().SetLength(2));
 			Assert.Throws<NullReferenceException>(() => SmartStream.CreateNull().Write(new byte[2], 1, 1));
 			Assert.Throws<NullReferenceException>(() => SmartStream.CreateNull().Position = default);
-			Assert.Throws<NullReferenceException>(() => SmartStream.CreateNull().ToArray());
+			//Assert.Throws<NullReferenceException>(() => SmartStream.CreateNull().ToArray());
 		});
 	}
 }

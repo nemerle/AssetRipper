@@ -52,9 +52,9 @@ namespace AssetRipper.IO.Files
 			return new UnityGUID(ToArray()).ToString();
 		}
 
-		public byte[] ToArray()
+		private byte[] ToArray()
 		{
-			return new byte[16]
+			return new[]
 			{
 				Byte0,
 				Byte1,

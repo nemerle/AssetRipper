@@ -4,15 +4,15 @@ namespace AssetRipper.SourceGenerated.Extensions
 {
 	public static class Texture2DArrayExtensions
 	{
-		public static byte[] GetImageData(this ITexture2DArray texture)
+		public static ReadOnlySpan<byte> GetImageData(this ITexture2DArray texture)
 		{
 			if (texture.ImageData_C187.Length > 0)
 			{
-				return texture.ImageData_C187;
+				return texture.ImageData_C187.CleanSpan();
 			}
 			else if (texture.Has_StreamData_C187() && texture.StreamData_C187.IsSet())
 			{
-				return texture.StreamData_C187.GetContent(texture.Collection);
+				return texture.StreamData_C187.GetContent(texture.Collection).CleanSpan();
 			}
 			else
 			{

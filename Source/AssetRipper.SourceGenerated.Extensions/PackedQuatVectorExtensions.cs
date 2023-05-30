@@ -1,4 +1,5 @@
-﻿using AssetRipper.Numerics;
+﻿using AssetRipper.IO;
+using AssetRipper.Numerics;
 using AssetRipper.SourceGenerated.Subclasses.PackedBitVector_Quaternionf;
 using System.Numerics;
 
@@ -9,17 +10,18 @@ namespace AssetRipper.SourceGenerated.Extensions
 		public static void CopyValuesFrom(this PackedBitVector_Quaternionf instance, PackedBitVector_Quaternionf source)
 		{
 			instance.NumItems = source.NumItems;
-			instance.Data = source.Data.ToArray();
+			instance.Data = source.Data.CopyDeep();
 		}
 
 		public static void Pack(this PackedBitVector_Quaternionf packedVector, ReadOnlySpan<Quaternion> inputData)
 		{
 			packedVector.NumItems = (uint)inputData.Length;
-			packedVector.Data = new byte[inputData.Length * 4];
+			packedVector.Data = new MemoryAreaAccessor(inputData.Length * 4);
 
 			int bitIndex = 0;
 			int byteIndex = 0;
 
+			var dest = packedVector.Data.WriteableSpan();
 			for (int i = 0; i < inputData.Length; i++)
 			{
 				Quaternion q = inputData[i];
@@ -56,7 +58,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 				int bitOffset = 0;
 				while (bitOffset < 3)
 				{
-					packedVector.Data[byteIndex] |= unchecked((byte)(flags >> bitOffset << bitIndex));
+					dest[byteIndex] |= unchecked((byte)(flags >> bitOffset << bitIndex));
 					int num = Math.Min(3 - bitOffset, 8 - bitIndex);
 					bitIndex += num;
 					bitOffset += num;
@@ -87,7 +89,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 						bitOffset = 0;
 						while (bitOffset < bitSize)
 						{
-							packedVector.Data[byteIndex] |= unchecked((byte)(x >> bitOffset << bitIndex));
+							dest[byteIndex] |= unchecked((byte)(x >> bitOffset << bitIndex));
 							int read = Math.Min(bitSize - bitOffset, 8 - bitIndex);
 							bitIndex += read;
 							bitOffset += read;
@@ -107,13 +109,14 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int bitIndex = 0;
 			int byteIndex = 0;
 			Quaternion[] buffer = new Quaternion[packedVector.NumItems];
+			var src = packedVector.Data.GetSpan();
 			for (int i = 0; i < packedVector.NumItems; i++)
 			{
 				uint flags = 0;
 				int bitOffset = 0;
 				while (bitOffset < 3)
 				{
-					flags |= unchecked((uint)(packedVector.Data[byteIndex] >> bitIndex << bitOffset));
+					flags |= unchecked((uint)(src[byteIndex] >> bitIndex << bitOffset));
 					int read = Math.Min(3 - bitOffset, 8 - bitIndex);
 					bitIndex += read;
 					bitOffset += read;
@@ -137,7 +140,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 						bitOffset = 0;
 						while (bitOffset < bitSize)
 						{
-							value |= unchecked((uint)(packedVector.Data[byteIndex] >> bitIndex << bitOffset));
+							value |= unchecked((uint)(src[byteIndex] >> bitIndex << bitOffset));
 							int num = Math.Min(bitSize - bitOffset, 8 - bitIndex);
 							bitIndex += num;
 							bitOffset += num;

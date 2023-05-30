@@ -9,7 +9,7 @@ internal class Program
 	private const string PathToRepository = "../../../../../";
 	private const string PathToTargetDirectory = PathToRepository + "Source/AssetRipper.IO.Endian/";
 	private const string PathToTestsDirectory = PathToRepository + "Source/AssetRipper.IO.Endian.Tests/";
-	private const string ReaderStructName = "EndianSpanReader";
+	private const string ReaderStructName = "EndianReader";
 	private const string WriterStructName = "EndianSpanWriter";
 	private const string TestsClassName = "EndianSpanTests";
 	private const string TargetNamespace = "AssetRipper.IO.Endian";
@@ -295,7 +295,7 @@ internal class Program
 	///     writer.Write(value1);
 	///     Assert.That(writer.Position, Is.EqualTo(sizeof(bool)));
 	/// 
-	///     EndianSpanReader reader = new EndianSpanReader(data, endianType);
+	///     EndianReader reader = new EndianReader(data, endianType);
 	///     Assert.That(reader.Length, Is.EqualTo(sizeof(bool));
 	///     bool value2 = reader.ReadBoolean();
 	///     Assert.That(reader.Position, Is.EqualTo(sizeof(bool)));

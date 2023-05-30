@@ -4,6 +4,7 @@ using AssetRipper.Assets.Export;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.Export.UnityProjects.Project.Collections;
 using AssetRipper.Import.Structure.Assembly;
+using AssetRipper.Import.Utils;
 using AssetRipper.IO.Files;
 using AssetRipper.SourceGenerated.Classes.ClassID_1035;
 using AssetRipper.SourceGenerated.Classes.ClassID_115;
@@ -101,7 +102,7 @@ namespace AssetRipper.Export.UnityProjects.Scripts
 		{
 			//The assembly file name without any extension.
 			ReadOnlySpan<byte> assemblyName = Encoding.UTF8.GetBytes(script.GetAssemblyNameFixed());
-			return UnityGUID.Md5Hash(assemblyName, script.Namespace_C115.Data, script.ClassName_C115.Data);
+			return UnityGUID.Md5Hash(assemblyName, script.Namespace_C115.Data.CleanSpan(), script.ClassName_C115.Data.CleanSpan());
 		}
 
 		private void OnScriptExported(IExportContainer container, IUnityObjectBase asset, string path)

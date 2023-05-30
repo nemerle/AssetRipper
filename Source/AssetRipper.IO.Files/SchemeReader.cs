@@ -6,7 +6,7 @@ using AssetRipper.IO.Files.CompressedFiles.Brotli;
 using AssetRipper.IO.Files.CompressedFiles.GZip;
 using AssetRipper.IO.Files.ResourceFiles;
 using AssetRipper.IO.Files.SerializedFiles;
-using AssetRipper.IO.Files.Streams.Smart;
+using AssetRipper.IO.Files.Streams.MultiFile;
 using AssetRipper.IO.Files.WebFiles;
 
 namespace AssetRipper.IO.Files
@@ -29,24 +29,20 @@ namespace AssetRipper.IO.Files
 
 		public static FileBase LoadFile(string filePath, string fileName)
 		{
-			SmartStream stream = SmartStream.OpenRead(filePath);
-			return ReadFile(stream, filePath, fileName);
+			var ms = MultiFileStream.OpenReadSingle(filePath);
+			return ReadFile(ms.CreateAccessor(), filePath, fileName);
 		}
 
-		public static FileBase ReadFile(byte[] buffer, string filePath, string fileName)
+		public static FileBase ReadFile(MemoryAreaAccessor stream, string filePath, string fileName)
 		{
-			SmartStream smartStream = SmartStream.CreateMemory(buffer, 0, buffer.Length, false);
-			return ReadFile(smartStream, filePath, fileName);
-		}
-
-		public static FileBase ReadFile(SmartStream stream, string filePath, string fileName)
-		{
+			long initialpos = stream.Position;
 			foreach (IScheme scheme in schemes)
 			{
 				if (scheme.CanRead(stream))
 				{
 					return scheme.Read(stream, filePath, fileName);
 				}
+				stream.Position = initialpos;
 			}
 
 			return new ResourceFile(stream, filePath, fileName);
@@ -54,15 +50,15 @@ namespace AssetRipper.IO.Files
 
 		public static FileBase ReadFile(ResourceFile file)
 		{
-			return ReadFile(file.Stream.CreateReference(), file.FilePath, file.Name);
+			return ReadFile(file.MemoryView, file.FilePath, file.Name);
 		}
 
 		public static bool IsReadableFile(string filePath)
 		{
-			using SmartStream stream = SmartStream.OpenRead(filePath);
+			using MemoryMappedFileWrapper file = new MemoryMappedFileWrapper(filePath);
 			foreach (IScheme scheme in schemes)
 			{
-				if (scheme.CanRead(stream))
+				if (scheme.CanRead(file.CreateAccessor()))
 				{
 					return true;
 				}

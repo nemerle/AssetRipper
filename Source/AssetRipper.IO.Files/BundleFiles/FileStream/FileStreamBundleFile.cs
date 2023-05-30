@@ -1,6 +1,7 @@
 using AssetRipper.IO.Endian;
 using AssetRipper.IO.Files.Extensions;
 using AssetRipper.IO.Files.ResourceFiles;
+using AssetRipper.IO.Files.Streams.MultiFile;
 using AssetRipper.IO.Files.Streams.Smart;
 using K4os.Compression.LZ4;
 
@@ -18,18 +19,18 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 
 		public FileStreamBundleFile(string filePath)
 		{
-			SmartStream stream = SmartStream.OpenRead(filePath);
-			Read(stream);
+			var ms = MultiFileStream.OpenReadSingle(filePath);
+			Read(ms.CreateAccessor());
 		}
 
-		public override void Read(SmartStream stream)
+		public override void Read(MemoryAreaAccessor memarea)
 		{
-			EndianReader reader = new EndianReader(stream, EndianType.BigEndian);
-			long basePosition = stream.Position;
+			var subarea = memarea.CreateSubAccessor();
+			var reader = new EndianReader(subarea, EndianType.BigEndian);
 			Header.Read(reader);
-			long headerSize = stream.Position - basePosition;
-			ReadFileStreamMetadata(stream, basePosition);//ReadBlocksInfoAndDirectory
-			ReadFileStreamData(stream, basePosition, headerSize);//ReadBlocks and ReadFiles
+			long headerSize = subarea.Position;
+			ReadFileStreamMetadata(subarea, 0);//ReadBlocksInfoAndDirectory
+			ReadFileStreamData(subarea, 0, headerSize);//ReadBlocks and ReadFiles
 		}
 
 		public override void Write(Stream stream)
@@ -42,7 +43,7 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			WriteFileStreamData(stream, basePosition, headerSize);
 		}
 
-		private void ReadFileStreamMetadata(Stream stream, long basePosition)
+		private void ReadFileStreamMetadata(MemoryAreaAccessor stream, long basePosition)
 		{
 			if (Header.Version >= BundleVersion.BF_LargeFilesSupport)
 			{
@@ -64,7 +65,8 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 
 				case CompressionType.Lzma:
 					{
-						using MemoryStream uncompressedStream = new MemoryStream(new byte[Header.UncompressedBlocksInfoSize]);
+						using var memwrapper = new MemoryMappedFileWrapper(Header.UncompressedBlocksInfoSize);
+						var uncompressedStream = memwrapper.CreateAccessor();
 						LzmaCompression.DecompressLzmaStream(stream, Header.CompressedBlocksInfoSize, uncompressedStream, Header.UncompressedBlocksInfoSize);
 
 						uncompressedStream.Position = 0;
@@ -76,14 +78,15 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 				case CompressionType.Lz4HC:
 					{
 						int uncompressedSize = Header.UncompressedBlocksInfoSize;
-						byte[] uncompressedBytes = new byte[uncompressedSize];
-						byte[] compressedBytes = new BinaryReader(stream).ReadBytes(Header.CompressedBlocksInfoSize);
-						int bytesWritten = LZ4Codec.Decode(compressedBytes, uncompressedBytes);
+						var memwrapper = new MemoryMappedFileWrapper(uncompressedSize);
+						var uncompressedStream = memwrapper.CreateAccessor();
+						var compressedBytes = stream.ReadBytes(Header.CompressedBlocksInfoSize);
+						int bytesWritten = LZ4Codec.Decode(compressedBytes, uncompressedStream.WriteableSpan());
 						if (bytesWritten != uncompressedSize)
 						{
 							throw new Exception($"Incorrect number of bytes written. {bytesWritten} instead of {uncompressedSize} for {compressedBytes.Length} compressed bytes");
 						}
-						ReadMetadata(new MemoryStream(uncompressedBytes), uncompressedSize);
+						ReadMetadata(uncompressedStream, uncompressedSize);
 					}
 					break;
 
@@ -92,10 +95,10 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			}
 		}
 
-		private void ReadMetadata(Stream stream, int metadataSize)
+		private void ReadMetadata(MemoryAreaAccessor stream, int metadataSize)
 		{
 			long metadataPosition = stream.Position;
-			using (EndianReader reader = new EndianReader(stream, EndianType.BigEndian))
+			var reader = new EndianReader(stream, EndianType.BigEndian);
 			{
 				BlocksInfo = BlocksInfo.Read(reader);
 				if (Header.Flags.GetBlocksAndDirectoryInfoCombined())
@@ -112,7 +115,7 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			}
 		}
 
-		private void ReadFileStreamData(Stream stream, long basePosition, long headerSize)
+		private void ReadFileStreamData(MemoryAreaAccessor stream, long basePosition, long headerSize)
 		{
 			if (Header.Flags.GetBlocksInfoAtTheEnd())
 			{
@@ -130,8 +133,8 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			using BundleFileBlockReader blockReader = new BundleFileBlockReader(stream, BlocksInfo);
 			foreach (FileStreamNode entry in DirectoryInfo.Nodes)
 			{
-				SmartStream entryStream = blockReader.ReadEntry(entry);
-				AddResourceFile(new ResourceFile(entryStream, FilePath, entry.Path));
+				var entryStream = blockReader.ReadEntry(entry);
+				AddResourceFile(new ResourceFile(entryStream.CreateAccessor(), FilePath, entry.Path));
 			}
 		}
 

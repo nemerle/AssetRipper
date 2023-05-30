@@ -25,7 +25,7 @@ namespace AssetRipper.Export.UnityProjects.Project.Exporters
 
 		public bool Export(IExportContainer container, IUnityObjectBase asset, string path)
 		{
-			File.WriteAllBytes(path, ((UnknownObject)asset).RawData);
+			File.WriteAllBytes(path, ((UnknownObject)asset).RawData.CleanSpan().ToArray());
 			return true;
 		}
 

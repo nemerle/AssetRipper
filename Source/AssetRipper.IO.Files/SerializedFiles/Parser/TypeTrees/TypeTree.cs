@@ -35,12 +35,11 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees
 				}
 				if (stringBufferSize == 0)
 				{
-					StringBuffer = Array.Empty<byte>();
+					StringBuffer = MemoryAreaAccessor.Empty;
 				}
 				else
 				{
-					StringBuffer = new byte[stringBufferSize];
-					reader.Read(StringBuffer, 0, StringBuffer.Length);
+                    StringBuffer = reader.takeView<byte>(stringBufferSize);
 				}
 				SetNamesFromBuffer();
 			}
@@ -62,7 +61,7 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees
 				{
 					node.Write(writer);
 				}
-				writer.Write(StringBuffer, 0, StringBuffer.Length);
+				writer.Write(StringBuffer.CleanSpan().ToArray(), 0, (int)StringBuffer.Length);
 			}
 			else
 			{
@@ -151,16 +150,14 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees
 		private void SetNamesFromBuffer()
 		{
 			Debug.Assert(IsFormat5);
-			Dictionary<uint, string> customTypes = new Dictionary<uint, string>();
-			using (MemoryStream stream = new MemoryStream(StringBuffer))
+			Dictionary<uint, string> customTypes = new();
+            var stream = StringBuffer.CloneClean();
+			var reader = new EndianReader(stream, EndianType.LittleEndian);
+			while (stream.Position < stream.Length)
 			{
-				using EndianReader reader = new EndianReader(stream, EndianType.LittleEndian);
-				while (stream.Position < stream.Length)
-				{
-					uint position = (uint)stream.Position;
-					string name = reader.ReadStringZeroTerm();
-					customTypes.Add(position, name);
-				}
+				uint position = (uint)stream.Position;
+				string name = reader.ReadStringZeroTerm();
+				customTypes.Add(position, name);
 			}
 
 			foreach (TypeTreeNode node in Nodes)
@@ -192,7 +189,7 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees
 		}
 
 		public List<TypeTreeNode> Nodes { get; } = new();
-		public byte[] StringBuffer { get; set; } = Array.Empty<byte>();
+		public MemoryAreaAccessor StringBuffer { get; set; } = MemoryAreaAccessor.Empty;
 		/// <summary>
 		/// 5.0.0a1 and greater<br/>
 		/// Generation 10

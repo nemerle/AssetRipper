@@ -1,4 +1,5 @@
 ﻿using AssetRipper.Assets.Export;
+using AssetRipper.IO;
 using AssetRipper.Yaml;
 using System.Text;
 
@@ -6,12 +7,12 @@ namespace AssetRipper.Assets.Utils
 {
 	public abstract class Utf8StringBase : UnityAssetBase, IEquatable<Utf8StringBase>, IEquatable<string>
 	{
-		public abstract byte[] Data { get; set; }
+        public abstract MemoryAreaAccessor Data { get; set; }
 
 		public string String
 		{
-			get => Encoding.UTF8.GetString(Data);
-			set => Data = Encoding.UTF8.GetBytes(value);
+            get => Encoding.UTF8.GetString(Data.CleanSpan());
+            set => Data = MemoryAreaAccessor.FromSpan(Encoding.UTF8.GetBytes(value));
 		}
 
 		public bool IsEmpty => Data.Length == 0;
@@ -27,20 +28,7 @@ namespace AssetRipper.Assets.Utils
 				return str1 is null && str2 is null;
 			}
 
-			if (str1.Data.Length != str2.Data.Length)
-			{
-				return false;
-			}
-
-			for (int i = 0; i < str1.Data.Length; i++)
-			{
-				if (str1.Data[i] != str2.Data[i])
-				{
-					return false;
-				}
-			}
-
-			return true;
+			return str1.Data == str2.Data;
 		}
 		public static bool operator !=(Utf8StringBase? str1, Utf8StringBase? str2) => !(str1 == str2);
 
@@ -82,6 +70,20 @@ namespace AssetRipper.Assets.Utils
 			}
 		}
 
+        private static MemoryAreaAccessor CopyData(MemoryAreaAccessor? source)
+        {
+			if (source is null || source.Length == 0)
+            {
+                return MemoryAreaAccessor.Empty;
+            }
+            else
+            {
+                var res = new MemoryAreaAccessor(source.Length);
+                res.CopyDataFrom(source);
+                return res;
+            }
+		}
+
 		public override bool Equals(object? obj)
 		{
 			if (obj is null)
@@ -104,7 +106,7 @@ namespace AssetRipper.Assets.Utils
 
 		public override int GetHashCode()
 		{
-			return unchecked((int)CrcUtils.CalculateDigest(Data));
+			return unchecked((int)CrcUtils.CalculateDigest(Data.CleanSpan()));
 		}
 
 		public override string ToString()

@@ -6,12 +6,12 @@ using System.Text;
 
 namespace AssetRipper.IO.Endian
 {
-    public interface IReadableMemoryArea<TSelf> where TSelf : IReadableMemoryArea<TSelf>
+    public interface IEndianReadable<TSelf> where TSelf : IEndianReadable<TSelf>
     {
-        static abstract TSelf Read(MemoryAreaReader reader);
+        static abstract TSelf Read(EndianReader reader);
     }
 
-    public class MemoryAreaReader
+    public class EndianReader
     {
         private MemoryAreaAccessor memoryAccessor;
         private bool isBigEndian = false;
@@ -26,7 +26,7 @@ namespace AssetRipper.IO.Endian
 
         protected const int BufferSize = 4096;
 
-        public MemoryAreaReader(MemoryAreaAccessor memoryAccessor, EndianType endianess, bool alignArray = false)
+        public EndianReader(MemoryAreaAccessor memoryAccessor, EndianType endianess, bool alignArray = false)
         {
             EndianType = endianess;
             this.memoryAccessor = memoryAccessor;
@@ -34,6 +34,7 @@ namespace AssetRipper.IO.Endian
         }
 
         public MemoryAreaAccessor Accessor => memoryAccessor;
+        public MemoryAreaAccessor BaseStream => memoryAccessor; // compatibility property
 
         public string ReadStringZeroTerm()
         {
@@ -86,12 +87,12 @@ namespace AssetRipper.IO.Endian
             return false;
         }
 
-        public T ReadEndian<T>() where T : IReadableMemoryArea<T>
+        public T ReadEndian<T>() where T : IEndianReadable<T>
         {
             return T.Read(this);
         }
 
-        public T[] ReadEndianArray<T>() where T : IReadableMemoryArea<T>
+        public T[] ReadEndianArray<T>() where T : IEndianReadable<T>
         {
             int count = ReadInt32();
             ThrowIfNotEnoughSpaceForArray(count, sizeof(byte));
@@ -460,7 +461,7 @@ namespace AssetRipper.IO.Endian
 
         private static bool IsAlignArrays(UnityVersion version) => version.IsGreaterEqual(2017);
 
-        private static void ThrowIfNotEnoughSpaceForArray(MemoryAreaReader reader, int elementNumberToRead, int elementSize)
+        private static void ThrowIfNotEnoughSpaceForArray(EndianReader reader, int elementNumberToRead, int elementSize)
         {
             long remainingBytes = reader.memoryAccessor.Length - reader.memoryAccessor.Position;
             if (remainingBytes < elementNumberToRead * elementSize)
@@ -470,9 +471,9 @@ namespace AssetRipper.IO.Endian
         }
     }
 
-    public interface IMemoryAreaReadable
+    public interface IEndianSpanReadable
     {
-        void ReadEditor(ref MemoryAreaReader reader);
-        void ReadRelease(ref MemoryAreaReader reader);
+        void ReadEditor(ref EndianReader reader);
+        void ReadRelease(ref EndianReader reader);
     }
 }

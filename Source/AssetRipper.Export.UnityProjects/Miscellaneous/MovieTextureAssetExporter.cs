@@ -24,7 +24,7 @@ namespace AssetRipper.Export.UnityProjects.Miscellaneous
 
 		public override bool Export(IExportContainer container, IUnityObjectBase asset, string path)
 		{
-			File.WriteAllBytes(path, ((IMovieTexture)asset).MovieData_C152!);
+			File.WriteAllBytes(path, ((IMovieTexture)asset).MovieData_C152!.CleanSpan().ToArray());
 			return true;
 		}
 	}

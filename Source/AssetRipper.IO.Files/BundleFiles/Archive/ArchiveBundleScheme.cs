@@ -5,7 +5,7 @@ namespace AssetRipper.IO.Files.BundleFiles.Archive
 {
 	public sealed class ArchiveBundleScheme : Scheme<ArchiveBundleFile>
 	{
-		public override bool CanRead(SmartStream stream)
+		public override bool CanRead(MemoryAreaAccessor stream)
 		{
 			return ArchiveBundleHeader.IsBundleHeader(new EndianReader(stream, EndianType.BigEndian));
 		}

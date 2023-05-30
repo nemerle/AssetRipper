@@ -18,32 +18,6 @@ namespace AssetRipper.IO.Files.Extensions
 			_this.ReadExactly(buffer, offset, count);
 		}
 
-		public static void CopyStream(this Stream _this, Stream dstStream)
-		{
-			byte[] buffer = new byte[BufferSize];
-			while (true)
-			{
-				int offset = 0;
-				int count = BufferSize;
-				int toWrite = 0;
-
-				int read;
-				do
-				{
-					read = _this.Read(buffer, offset, count);
-					offset += read;
-					count -= read;
-					toWrite += read;
-				} while (read != 0);
-
-				dstStream.Write(buffer, 0, toWrite);
-				if (toWrite != BufferSize)
-				{
-					return;
-				}
-			}
-		}
-
 		public static void CopyStream(this Stream _this, Stream dstStream, long size)
 		{
 			byte[] buffer = new byte[BufferSize];

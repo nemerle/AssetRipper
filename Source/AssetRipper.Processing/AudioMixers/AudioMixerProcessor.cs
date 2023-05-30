@@ -1,9 +1,9 @@
 ﻿using AssetRipper.Assets.Bundles;
 using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.Generics;
-using AssetRipper.Assets.Metadata;
 using AssetRipper.Assets.Utils;
 using AssetRipper.Import.Logging;
+using AssetRipper.IO;
 using AssetRipper.IO.Files;
 using AssetRipper.SourceGenerated;
 using AssetRipper.SourceGenerated.Classes.ClassID_240;
@@ -278,17 +278,18 @@ namespace AssetRipper.Processing.AudioMixers
 			return guid;
 		}
 
-		private static List<Utf8String> ParseNameBuffer(byte[] buffer)
+		private static List<Utf8String> ParseNameBuffer(MemoryAreaAccessor buffer)
 		{
 			List<Utf8String> names = new();
 			int offset = 0;
-			while (buffer[offset] != 0)
+			var src = buffer.CreateSubAccessor();
+			var src_span = src.GetSpan();
+			while (src_span[(int)src.Position] != 0)
 			{
-				int start = offset;
-				while (buffer[++offset] != 0) { }
+				long start = src.Position;
+				while (src_span[++offset] != 0) { }
 
-				byte[] utf8Data = SubArray(buffer, start, offset - start);
-				names.Add(new Utf8String { Data = utf8Data });
+				names.Add(new Utf8String { Data = src.CreateSubAccessor(start,offset-start) });
 
 				offset++;
 			}

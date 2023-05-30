@@ -7,7 +7,7 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 {
 	internal sealed class BundleFileBlockReader : IDisposable
 	{
-		public BundleFileBlockReader(Stream stream, BlocksInfo blocksInfo)
+		public BundleFileBlockReader(MemoryAreaAccessor stream, BlocksInfo blocksInfo)
 		{
 			m_stream = stream;
 			m_blocksInfo = blocksInfo;
@@ -25,7 +25,7 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			GC.SuppressFinalize(this);
 		}
 
-		public SmartStream ReadEntry(FileStreamNode entry)
+		public MemoryMappedFileWrapper ReadEntry(FileStreamNode entry)
 		{
 			if (m_isDisposed)
 			{
@@ -43,7 +43,8 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			}
 			long entryOffsetInsideBlock = entry.Offset - blockDecompressedOffset;
 
-			using SmartStream entryStream = CreateStream(entry.Size);
+			MemoryMappedFileWrapper entryRes = CreateStream(entry.Size);
+			var entryStream= entryRes.CreateAccessor();
 			long left = entry.Size;
 			m_stream.Position = m_dataOffset + blockCompressedOffset;
 
@@ -51,14 +52,14 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 			while (left > 0)
 			{
 				long blockStreamOffset;
-				Stream blockStream;
+				MemoryAreaAccessor blockStream;
 				StorageBlock block = m_blocksInfo.StorageBlocks[blockIndex];
 				if (m_cachedBlockIndex == blockIndex)
 				{
 					// data of the previous entry is in the same block as this one
 					// so we don't need to unpack it once again. Instead we can use cached stream
 					blockStreamOffset = 0;
-					blockStream = m_cachedBlockStream;
+					blockStream = m_cachedBlockStreamAccessor;
 					m_stream.Position += block.CompressedSize;
 				}
 				else
@@ -73,18 +74,19 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 					{
 						blockStreamOffset = 0;
 						m_cachedBlockIndex = blockIndex;
-						m_cachedBlockStream.Move(CreateStream(block.UncompressedSize));
+						m_cachedBlockStream = CreateStream(block.UncompressedSize);
+						m_cachedBlockStreamAccessor = m_cachedBlockStream.CreateAccessor();
 						switch (compressType)
 						{
 							case CompressionType.Lzma:
-								LzmaCompression.DecompressLzmaStream(m_stream, block.CompressedSize, m_cachedBlockStream, block.UncompressedSize);
+								LzmaCompression.DecompressLzmaStream(m_stream, (long)block.CompressedSize, m_cachedBlockStreamAccessor, (long)block.UncompressedSize);
 								break;
 
 							case CompressionType.Lz4:
 							case CompressionType.Lz4HC:
 								uint uncompressedSize = block.UncompressedSize;
 								byte[] uncompressedBytes = new byte[uncompressedSize];
-								byte[] compressedBytes = new BinaryReader(m_stream).ReadBytes((int)block.CompressedSize);
+								var compressedBytes = m_stream.ReadBytes((int)block.CompressedSize);
 								int bytesWritten = LZ4Codec.Decode(compressedBytes, uncompressedBytes);
 								if (bytesWritten < 0)
 								{
@@ -94,13 +96,13 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 								{
 									DecompressionFailedException.ThrowIncorrectNumberBytesWritten(uncompressedSize, bytesWritten);
 								}
-								new MemoryStream(uncompressedBytes).CopyTo(m_cachedBlockStream);
+								m_cachedBlockStreamAccessor.Write(uncompressedBytes);
 								break;
 
 							default:
 								throw new NotSupportedException($"Bundle compression '{compressType}' isn't supported");
 						}
-						blockStream = m_cachedBlockStream;
+						blockStream = m_cachedBlockStreamAccessor;
 					}
 				}
 
@@ -113,7 +115,7 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 				entryOffsetInsideBlock = 0;
 
 				long size = Math.Min(blockSize, left);
-				blockStream.CopyStream(entryStream, size);
+				entryStream.Write(blockStream, size);
 				blockIndex++;
 
 				blockCompressedOffset += block.CompressedSize;
@@ -124,18 +126,21 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 				DecompressionFailedException.ThrowReadMoreThanExpected(entry.Size, entry.Size - left);
 			}
 			entryStream.Position = 0;
-			return entryStream.CreateReference();
+			return entryRes;
 		}
 
 		private void Dispose(bool disposing)
 		{
 			m_isDisposed = true;
-			m_cachedBlockStream.FreeReference();
+			if (disposing)
+			{
+				m_cachedBlockStream?.Dispose();
+			}
 		}
 
-		private static SmartStream CreateStream(long decompressedSize)
+		private static MemoryMappedFileWrapper CreateStream(long decompressedSize)
 		{
-			return decompressedSize > MaxMemoryStreamLength ? SmartStream.CreateTemp() : SmartStream.CreateMemory(new byte[decompressedSize]);
+			return new MemoryMappedFileWrapper(decompressedSize);
 		}
 
 		/// <summary>
@@ -145,11 +150,12 @@ namespace AssetRipper.IO.Files.BundleFiles.FileStream
 		/// This number can be set to any integer value, including <see cref="int.MaxValue"/>.
 		/// </remarks>
 		private const int MaxMemoryStreamLength = 1024 * 1024;
-		private readonly Stream m_stream;
+		private readonly MemoryAreaAccessor m_stream;
 		private readonly BlocksInfo m_blocksInfo = new();
 		private readonly long m_dataOffset;
 
-		private readonly SmartStream m_cachedBlockStream = SmartStream.CreateNull();
+		private MemoryMappedFileWrapper? m_cachedBlockStream = null;
+		private MemoryAreaAccessor? m_cachedBlockStreamAccessor = null;
 		private int m_cachedBlockIndex = -1;
 
 		private bool m_isDisposed = false;

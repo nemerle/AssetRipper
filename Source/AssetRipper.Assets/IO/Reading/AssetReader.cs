@@ -1,11 +1,12 @@
 using AssetRipper.Assets.Collections;
+using AssetRipper.IO;
 using AssetRipper.IO.Endian;
 
 namespace AssetRipper.Assets.IO.Reading
 {
 	public sealed class AssetReader : EndianReader
 	{
-		public AssetReader(Stream stream, AssetCollection assetCollection) : base(stream, assetCollection.EndianType, false)
+        public AssetReader(MemoryAreaAccessor stream, AssetCollection assetCollection) : base(stream, assetCollection.EndianType, false)
 		{
 			AssetCollection = assetCollection;
 		}

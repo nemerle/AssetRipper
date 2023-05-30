@@ -5,15 +5,15 @@ namespace AssetRipper.SourceGenerated.Extensions
 {
 	public static class Texture3DExtensions
 	{
-		public static byte[] GetImageData(this ITexture3D texture)
+		public static ReadOnlySpan<byte> GetImageData(this ITexture3D texture)
 		{
 			if (texture.ImageData_C117.Length > 0)
 			{
-				return texture.ImageData_C117;
+				return texture.ImageData_C117.CleanSpan();
 			}
 			else if (texture.Has_StreamData_C117() && texture.StreamData_C117.IsSet())
 			{
-				return texture.StreamData_C117.GetContent(texture.Collection);
+				return texture.StreamData_C117.GetContent(texture.Collection).CleanSpan();
 			}
 			else
 			{

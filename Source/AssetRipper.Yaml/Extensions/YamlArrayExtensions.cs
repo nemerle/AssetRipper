@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using AssetRipper.IO;
+using System.Text;
 
 namespace AssetRipper.Yaml.Extensions
 {
@@ -15,7 +16,24 @@ namespace AssetRipper.Yaml.Extensions
 			return new YamlScalarNode(sb.ToString(), true);
 		}
 
+        public static YamlNode ExportYaml(this MemoryAreaAccessor _this)
+        {
+            StringBuilder sb = new StringBuilder((int)_this.Length * 2);
+            var span = _this.CleanSpan();
+            for (int i = 0; i < _this.Length; i++)
+            {
+                sb.AppendHex(span[i]);
+            }
+
+            return new YamlScalarNode(sb.ToString(), true);
+        }
 		public static void AddTypelessData(this YamlMappingNode mappingNode, string name, byte[] data)
+        {
+            mappingNode.Add(name, data.Length);
+            mappingNode.Add(TypelessdataName, data.ExportYaml());
+        }
+
+        public static void AddTypelessData(this YamlMappingNode mappingNode, string name, MemoryAreaAccessor data)
 		{
 			mappingNode.Add(name, data.Length);
 			mappingNode.Add(TypelessdataName, data.ExportYaml());

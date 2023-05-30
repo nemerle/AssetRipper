@@ -9,6 +9,7 @@ using AssetRipper.SourceGenerated.Classes.ClassID_243;
 using AssetRipper.SourceGenerated.Classes.ClassID_244;
 using AssetRipper.SourceGenerated.Classes.ClassID_272;
 using AssetRipper.SourceGenerated.Classes.ClassID_273;
+using AssetRipper.SourceGenerated.Extensions;
 
 namespace AssetRipper.Export.UnityProjects.AudioMixers
 {

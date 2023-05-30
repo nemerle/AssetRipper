@@ -1,37 +1,29 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace AssetRipper.IO.Files.Streams.MultiFile
 {
-	public sealed class MultiFileStream : Stream
+	public sealed class MultiFileStream : IDisposable
 	{
-		public MultiFileStream(IEnumerable<Stream> streams)
+        public MultiFileStream(IEnumerable<MemoryMappedFileWrapper?> streams)
 		{
 			if (streams == null)
 			{
 				throw new ArgumentNullException(nameof(streams));
 			}
-			foreach (Stream stream in streams)
+			foreach (MemoryMappedFileWrapper? stream in streams)
 			{
 				if (stream == null)
 				{
 					throw new ArgumentNullException();
 				}
-				if (!stream.CanSeek)
-				{
-					throw new Exception($"Stream {stream} isn't seekable");
-				}
 			}
 
-			m_streams = streams.ToArray();
-			if (m_streams.Count == 0)
+			m_files = streams.ToArray();
+			if (m_files.Count == 0)
 			{
 				throw new ArgumentException(null, nameof(streams));
 			}
-
-			Length = streams.Sum(t => t.Length);
-			CanRead = m_streams.All(t => t.CanRead);
-			CanWrite = m_streams.All(t => t.CanWrite);
-			UpdateCurrentStream();
 		}
 
 		~MultiFileStream()
@@ -67,14 +59,11 @@ namespace AssetRipper.IO.Files.Streams.MultiFile
 				{
 					return false;
 				}
-				else
-				{
-					return Exists(directory, file);
-				}
+				return Exists(directory, file);
 			}
 		}
 
-		public static Stream OpenRead(string path)
+        public static MultiFileStream OpenRead(string path)
 		{
 			if (IsMultiFile(path))
 			{
@@ -83,7 +72,7 @@ namespace AssetRipper.IO.Files.Streams.MultiFile
 			}
 			if (File.Exists(path))
 			{
-				return File.OpenRead(path);
+                return new MultiFileStream( new[] { new MemoryMappedFileWrapper(path) } );
 			}
 
 			{
@@ -171,7 +160,27 @@ namespace AssetRipper.IO.Files.Streams.MultiFile
 			return Directory.GetFiles(dirPath, filePatern);
 		}
 
-		private static Stream OpenRead(string dirPath, string fileName)
+        private static Dictionary<string, MemoryMappedFileWrapper> s_wrapped = new();
+        public static MemoryMappedFileWrapper OpenReadSingle(string path)
+        {
+			if(s_wrapped.TryGetValue(path, out MemoryMappedFileWrapper? wrapper))
+            {
+                return wrapper;
+            }
+			if (IsMultiFile(path))
+            {
+                throw new ArgumentException("Path is a multi file", nameof(path));
+            }
+			if (File.Exists(path))
+            {
+                var res= new MemoryMappedFileWrapper(path);
+                s_wrapped[path] = res;
+                return res;
+            }
+			throw new ArgumentException("File does not exist");
+		}
+
+        private static MultiFileStream OpenRead(string dirPath, string fileName)
 		{
 			string filePath = Path.Combine(dirPath, fileName);
 			string splitFilePath = filePath + ".split";
@@ -187,20 +196,19 @@ namespace AssetRipper.IO.Files.Streams.MultiFile
 			}
 
 			splitFiles = splitFiles.OrderBy(t => t, s_splitNameComparer).ToArray();
-			Stream[] streams = new Stream[splitFiles.Length];
+			MemoryMappedFileWrapper?[] streams = new MemoryMappedFileWrapper[splitFiles.Length];
 			try
 			{
 				for (int i = 0; i < splitFiles.Length; i++)
 				{
-					Stream stream = File.OpenRead(splitFiles[i]);
-					streams[i] = stream;
+                    streams[i] = new MemoryMappedFileWrapper(splitFiles[i]);
 				}
 
 				return new MultiFileStream(streams);
 			}
 			catch
 			{
-				foreach (Stream stream in streams)
+                foreach (MemoryMappedFileWrapper? stream in streams)
 				{
 					if (stream == null)
 					{
@@ -235,158 +243,28 @@ namespace AssetRipper.IO.Files.Streams.MultiFile
 			}
 		}
 
-		public override void Flush()
-		{
-			m_currentStream.Flush();
-		}
-
-		public override long Seek(long offset, SeekOrigin origin)
-		{
-			switch (origin)
-			{
-				case SeekOrigin.Begin:
-					Position = offset;
-					break;
-				case SeekOrigin.Current:
-					Position += offset;
-					break;
-				case SeekOrigin.End:
-					Position = Length - offset;
-					break;
-			}
-			return Position;
-		}
-
-		public override void SetLength(long value)
+        public void SetLength(long value)
 		{
 			throw new NotSupportedException();
 		}
 
-		public override int ReadByte()
-		{
-			int value = m_currentStream.ReadByte();
-			if (value >= 0)
-			{
-				m_position++;
-				if (m_position == m_currentEnd)
-				{
-					NextStream();
-				}
-			}
-			return value;
+        public void Dispose()
+        {
+			Dispose(disposing: true);
+			// This object will be cleaned up by the Dispose method.
+			// Therefore, you should call GC.SuppressFinalize to
+			// take this object off the finalization queue
+			// and prevent finalization code for this object
+			// from executing a second time.
+			GC.SuppressFinalize(this);
 		}
-
-		public override int Read(byte[] buffer, int offset, int count)
-		{
-			int read = m_currentStream.Read(buffer, offset, count);
-			m_position += read;
-			if (m_position == m_currentEnd)
-			{
-				NextStream();
-			}
-
-			return read;
+        protected void Dispose(bool disposing)
+        {
+			foreach (var fl in m_files)
+            {
+                fl.Dispose();
+            }
 		}
-
-		public override void WriteByte(byte value)
-		{
-			m_currentStream.WriteByte(value);
-			m_position++;
-			if (m_position == m_currentEnd)
-			{
-				NextStream();
-			}
-		}
-
-		public override void Write(byte[] buffer, int offset, int count)
-		{
-			while (count > 0)
-			{
-				long available = m_currentEnd - m_position;
-				int toWrite = count < available ? count : (int)available;
-				m_currentStream.Write(buffer, offset, toWrite);
-				m_position += toWrite;
-				if (m_position == m_currentEnd)
-				{
-					NextStream();
-				}
-
-				offset += toWrite;
-				count -= toWrite;
-			}
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			foreach (Stream stream in m_streams)
-			{
-				stream.Dispose();
-			}
-			base.Dispose(disposing);
-		}
-
-		private void NextStream()
-		{
-			int nextStreamIndex = m_streamIndex + 1;
-			if (nextStreamIndex < m_streams.Count)
-			{
-				m_currentBegin += m_currentStream.Length;
-				m_streamIndex = nextStreamIndex;
-				m_currentStream = m_streams[m_streamIndex];
-				m_currentStream.Position = 0;
-				m_currentEnd += m_currentStream.Length;
-			}
-		}
-
-		[MemberNotNull(nameof(m_currentStream))]
-		private void UpdateCurrentStream()
-		{
-			m_currentBegin = 0;
-			m_currentEnd = 0;
-			for (int i = 0; i < m_streams.Count; i++)
-			{
-				m_streamIndex = i;
-				m_currentStream = m_streams[m_streamIndex];
-				m_currentEnd = m_currentBegin + m_currentStream.Length;
-				if (m_currentEnd > m_position)
-				{
-					m_currentStream.Position = m_position - m_currentBegin;
-					return;
-				}
-
-				m_currentBegin += m_currentStream.Length;
-			}
-			m_currentBegin -= m_currentStream!.Length;
-			m_currentStream.Position = m_position - m_currentBegin;
-		}
-
-		public override long Position
-		{
-			get => m_position;
-			set
-			{
-				if (value < 0)
-				{
-					throw new ArgumentOutOfRangeException(nameof(value), value, null);
-				}
-
-				m_position = value;
-				if (value < m_currentBegin || value >= m_currentEnd)
-				{
-					UpdateCurrentStream();
-				}
-				else
-				{
-					m_currentStream.Position = value - m_currentBegin;
-				}
-			}
-		}
-
-		public override long Length { get; }
-
-		public override bool CanRead { get; }
-		public override bool CanWrite { get; }
-		public override bool CanSeek => true;
 
 		private static readonly Regex s_splitCheck = new Regex($@".+{MultifileRegPostfix}[0-9]+$", RegexOptions.Compiled);
 		private static readonly SplitNameComparer s_splitNameComparer = new SplitNameComparer();
@@ -396,12 +274,6 @@ namespace AssetRipper.IO.Files.Streams.MultiFile
 		/// <summary>
 		/// Always has at least one element.
 		/// </summary>
-		private readonly IReadOnlyList<Stream> m_streams;
-
-		private Stream m_currentStream;
-		private int m_streamIndex;
-		private long m_position;
-		private long m_currentBegin;
-		private long m_currentEnd;
+        private readonly IReadOnlyList<MemoryMappedFileWrapper> m_files;
 	}
 }

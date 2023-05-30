@@ -41,7 +41,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 		{
 			return TryGetDecodedAudioClipData(audioClip.GetAudioData(), out decodedData, out fileExtension);
 		}
-		public static bool TryGetDecodedAudioClipData(byte[] rawData, [NotNullWhen(true)] out byte[]? decodedData, [NotNullWhen(true)] out string? fileExtension)
+		public static bool TryGetDecodedAudioClipData(ReadOnlySpan<byte> rawData, [NotNullWhen(true)] out byte[]? decodedData, [NotNullWhen(true)] out string? fileExtension)
 		{
 			decodedData = null;
 			fileExtension = null;
@@ -51,7 +51,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 				return false;
 			}
 
-			if (FsbLoader.TryLoadFsbFromByteArray(rawData, out FmodSoundBank? fsbData))
+			if (FsbLoader.TryLoadFsbFromByteArray(rawData.ToArray(), out FmodSoundBank? fsbData))
 			{
 				FmodAudioType audioType = fsbData!.Header.AudioType;
 				try
@@ -94,7 +94,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 		/// <param name="fsbData">The data from an FSB file</param>
 		/// <param name="decodedData">The decoded data in the wav audio format</param>
 		/// <returns>True if the audio could be exported in the wav format</returns>
-		public static bool TryGetDecodedWavData(byte[] fsbData, [NotNullWhen(true)] out byte[]? decodedData)
+		public static bool TryGetDecodedWavData(ReadOnlySpan<byte> fsbData, [NotNullWhen(true)] out byte[]? decodedData)
 		{
 			if (TryGetDecodedAudioClipData(fsbData, out decodedData, out string? fileExtension))
 			{
@@ -115,7 +115,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 			}
 		}
 
-		public static bool TryGetAudioType(byte[] rawData, out FmodAudioType type)
+		public static bool TryGetAudioType(ReadOnlySpan<byte> rawData, out FmodAudioType type)
 		{
 			if (rawData.Length == 0)
 			{
@@ -123,7 +123,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 				return false;
 			}
 
-			using MemoryStream input = new MemoryStream(rawData);
+			using MemoryStream input = new MemoryStream(rawData.ToArray());
 			using BinaryReader reader = new BinaryReader(input);
 			try
 			{
@@ -149,7 +149,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 		}
 
 		public static string GetFileExtension(IAudioClip audioClip) => GetFileExtension(audioClip.GetAudioData());
-		public static string GetFileExtension(byte[] rawData)
+		public static string GetFileExtension(ReadOnlySpan<byte> rawData)
 		{
 			if (TryGetAudioType(rawData, out FmodAudioType audioType))
 			{

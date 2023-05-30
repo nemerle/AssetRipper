@@ -1,4 +1,5 @@
 ﻿using AssetRipper.Assets.Collections;
+using AssetRipper.IO;
 using AssetRipper.IO.Files.ResourceFiles;
 using AssetRipper.SourceGenerated.Subclasses.StreamingInfo;
 
@@ -6,7 +7,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 {
 	public static class StreamingInfoExtensions
 	{
-		public static bool IsSet(this IStreamingInfo streamingInfo) => !streamingInfo.Path.Data.IsNullOrEmpty();
+		public static bool IsSet(this IStreamingInfo streamingInfo) => streamingInfo.Path.Data!= MemoryAreaAccessor.Empty;
 
 		public static bool CheckIntegrity(this IStreamingInfo streamingInfo, AssetCollection file)
 		{
@@ -17,18 +18,16 @@ namespace AssetRipper.SourceGenerated.Extensions
 			return file.Bundle.ResolveResource(streamingInfo.Path.String) != null;
 		}
 
-		public static byte[] GetContent(this IStreamingInfo streamingInfo, AssetCollection file)
+		public static MemoryAreaAccessor GetContent(this IStreamingInfo streamingInfo, AssetCollection file)
 		{
 			ResourceFile? res = file.Bundle.ResolveResource(streamingInfo.Path.String);
 			if (res == null)
 			{
-				return Array.Empty<byte>();
+				return MemoryAreaAccessor.Empty;
 			}
 
-			byte[] data = new byte[streamingInfo.Size];
-			res.Stream.Position = (long)streamingInfo.GetOffset();
-			res.Stream.ReadBuffer(data, 0, data.Length);
-			return data;
+			var result = res.MemoryView.CloneClean();
+			return result.CreateSubAccessor((long)streamingInfo.GetOffset(), streamingInfo.Size);
 		}
 
 		public static ulong GetOffset(this IStreamingInfo streamingInfo)
@@ -59,7 +58,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 		{
 			streamingInfo.Offset_UInt32 = default;
 			streamingInfo.Offset_UInt64 = default;
-			streamingInfo.Path.Data = Array.Empty<byte>();
+			streamingInfo.Path.Data = MemoryAreaAccessor.Empty;
 			streamingInfo.Size = default;
 		}
 	}

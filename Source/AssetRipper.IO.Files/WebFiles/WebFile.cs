@@ -10,39 +10,30 @@ namespace AssetRipper.IO.Files.WebFiles
 	{
 		private const string Signature = "UnityWebData1.0";
 
-		public static bool IsWebFile(string webPath)
+		public static bool IsWebFile(MemoryAreaAccessor stream)
 		{
-			using Stream stream = MultiFileStream.OpenRead(webPath);
-			return IsWebFile(stream);
-		}
-
-		public static bool IsWebFile(Stream stream)
-		{
-			using EndianReader reader = new EndianReader(stream, EndianType.LittleEndian);
+			var reader = new EndianReader(stream, EndianType.LittleEndian);
 			return IsWebFile(reader);
 		}
 
-		public override void Read(SmartStream stream)
+		public override void Read(MemoryAreaAccessor stream)
 		{
 			long basePosition = stream.Position;
 			List<WebFileEntry> entries = new();
-			using (EndianReader reader = new EndianReader(stream, EndianType.LittleEndian))
-			{
-				string signature = reader.ReadStringZeroTerm();
-				Debug.Assert(signature == Signature, $"Signature '{signature}' doesn't match to '{Signature}'");
+			var reader = new EndianReader(stream, EndianType.LittleEndian);
+			string signature = reader.ReadStringZeroTerm();
+			Debug.Assert(signature == Signature, $"Signature '{signature}' doesn't match to '{Signature}'");
 
-				int headerLength = reader.ReadInt32(); //total size of the header including the signature and all the entries.
-				while (reader.BaseStream.Position - basePosition < headerLength)
-				{
-					entries.Add(WebFileEntry.Read(reader));
-				}
+			int headerLength = reader.ReadInt32(); //total size of the header including the signature and all the entries.
+			while (reader.Accessor.Position - basePosition < headerLength)
+			{
+				entries.Add(WebFileEntry.Read(reader));
 			}
 
 			foreach (WebFileEntry entry in entries)
 			{
-				byte[] buffer = new byte[entry.Size];
 				stream.Position = entry.Offset + basePosition;
-				stream.ReadExactly(buffer, 0, buffer.Length);
+				var buffer = stream.CreateSubAccessor(0,entry.Size);
 				ResourceFile file = new ResourceFile(buffer, FilePath, entry.Name);
 				AddResourceFile(file);
 			}
@@ -60,7 +51,7 @@ namespace AssetRipper.IO.Files.WebFiles
 			writer.WriteStringZeroTerm(Signature);
 			long headerSizePosition = writer.BaseStream.Position;
 
-			List<(string, byte[])> entryDataList = AllFiles.Select(f => (f.Name, f.ToByteArray())).ToList();
+			List<(string, MemoryAreaAccessor)> entryDataList = AllFiles.Select(f => (f.Name, f.ToCleanStream())).ToList();
 
 			//Write entries
 			long entriesStartPosition = headerSizePosition + sizeof(int);
@@ -69,12 +60,12 @@ namespace AssetRipper.IO.Files.WebFiles
 			long[] offsetPositions = new long[entryDataList.Count];
 			for (int i = 0; i < entryDataList.Count; i++)
 			{
-				(string entryName, byte[] entryData) = entryDataList[i];
+				(string entryName, MemoryAreaAccessor entryData) = entryDataList[i];
 				offsetPositions[i] = writer.BaseStream.Position;
 				writer.BaseStream.Position += sizeof(int);
 				writer.Write(entryData.Length);
 				writer.Write(entryName);
-				currentOffset += entryData.Length;
+				currentOffset += (int)entryData.Length;
 			}
 			long entriesEndPosition = writer.BaseStream.Position;
 
@@ -86,7 +77,7 @@ namespace AssetRipper.IO.Files.WebFiles
 			//Write data for the entries
 			for (int i = 0; i < entryDataList.Count; i++)
 			{
-				byte[] entryData = entryDataList[i].Item2;
+				MemoryAreaAccessor entryData = entryDataList[i].Item2;
 				if (alignEntries)
 				{
 					writer.AlignStream();//Optional, but data alignment is generally a good thing.
@@ -95,17 +86,17 @@ namespace AssetRipper.IO.Files.WebFiles
 				writer.BaseStream.Position = offsetPositions[i];
 				writer.Write((int)(dataPosition - basePosition));
 				writer.BaseStream.Position = dataPosition;
-				writer.Write(entryData);
+				entryData.CopyTo(writer.BaseStream);
 			}
 		}
 
 		internal static bool IsWebFile(EndianReader reader)
 		{
-			if (reader.BaseStream.Length - reader.BaseStream.Position > Signature.Length)
+			if (reader.Accessor.Length - reader.Accessor.Position > Signature.Length)
 			{
-				long position = reader.BaseStream.Position;
+				long position = reader.Accessor.Position;
 				bool isRead = reader.ReadStringZeroTerm(Signature.Length + 1, out string? signature);
-				reader.BaseStream.Position = position;
+				reader.Accessor.Position = position;
 				if (isRead)
 				{
 					return signature == Signature;

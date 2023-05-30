@@ -17,7 +17,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 	[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
 	public record struct SerializableField(ulong PValue, object CValue)
 	{
-		public void Read(ref EndianSpanReader reader, UnityVersion version, TransferInstructionFlags flags, int depth, in SerializableType.Field etalon)
+		public void Read(ref EndianReader reader, UnityVersion version, TransferInstructionFlags flags, int depth, in SerializableType.Field etalon)
 		{
 			switch (etalon.Type.Type)
 			{
@@ -30,7 +30,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					{
 						PValue = reader.ReadBoolean() ? 1U : 0U;
 					}
-					reader.Align();
+                    reader.AlignStream();
 					break;
 
 				case PrimitiveType.Char:
@@ -42,7 +42,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					{
 						PValue = reader.ReadChar();
 					}
-					reader.Align();
+                    reader.AlignStream();
 					break;
 
 				case PrimitiveType.SByte:
@@ -54,7 +54,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					{
 						PValue = unchecked((byte)reader.ReadSByte());
 					}
-					reader.Align();
+                    reader.AlignStream();
 					break;
 
 				case PrimitiveType.Byte:
@@ -66,7 +66,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					{
 						PValue = reader.ReadByte();
 					}
-					reader.Align();
+                    reader.AlignStream();
 					break;
 
 				case PrimitiveType.Short:
@@ -78,7 +78,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					{
 						PValue = unchecked((ushort)reader.ReadInt16());
 					}
-					reader.Align();
+                    reader.AlignStream();
 					break;
 
 				case PrimitiveType.UShort:
@@ -90,7 +90,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					{
 						PValue = reader.ReadUInt16();
 					}
-					reader.Align();
+                    reader.AlignStream();
 					break;
 
 				case PrimitiveType.Int:
@@ -198,7 +198,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 					throw new NotSupportedException(etalon.Type.Type.ToString());
 			}
 
-			static IAsset CreateAndReadComplexStructure(ref EndianSpanReader reader, UnityVersion version, TransferInstructionFlags flags, int depth, SerializableType.Field etalon)
+			static IAsset CreateAndReadComplexStructure(ref EndianReader reader, UnityVersion version, TransferInstructionFlags flags, int depth, SerializableType.Field etalon)
 			{
 				IAsset asset = etalon.Type.CreateInstance(depth + 1, version);
 				if (asset is SerializableStructure structure)

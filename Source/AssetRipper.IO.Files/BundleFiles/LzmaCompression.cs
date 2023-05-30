@@ -32,22 +32,54 @@ namespace AssetRipper.IO.Files.BundleFiles
 			}
 			compressedStream.Position = basePosition + compressedSize;
 		}
+		public static void DecompressLzmaStream(MemoryAreaAccessor compressedStream, long compressedSize, Stream decompressedStream, long decompressedSize)
+		{
+			long basePosition = compressedStream.Position;
+			var properties = compressedStream.ReadBytes(PropertiesSize);
 
+			long headSize = compressedStream.Position - basePosition;
+			long headlessSize = compressedSize - headSize;
+
+			DecompressLzmaStream(properties, compressedStream, headlessSize, decompressedStream, decompressedSize);
+
+			if (compressedStream.Position != basePosition + compressedSize)
+			{
+				throw new Exception($"Read {compressedStream.Position - basePosition} more than expected {compressedSize}");
+			}
+			
+			//compressedStream.Position = basePosition + compressedSize;
+		}
+
+		public static void DecompressLzmaStream(MemoryAreaAccessor compressedStream, long compressedSize, MemoryAreaAccessor decompressedStream, long decompressedSize)
+		{
+			long basePosition = compressedStream.Position;
+			var properties = compressedStream.ReadBytes(PropertiesSize);
+
+			long headSize = compressedStream.Position - basePosition;
+			long headlessSize = compressedSize - headSize;
+
+			DecompressLzmaStream(properties, compressedStream, headlessSize, decompressedStream, decompressedSize);
+
+			if (compressedStream.Position != basePosition + compressedSize)
+			{
+				throw new Exception($"Read {compressedStream.Position - basePosition} more than expected {compressedSize}");
+			}
+			
+			//compressedStream.Position = basePosition + compressedSize;
+		}
 		/// <summary>
 		/// Read LZMA properties and decompressed size and decompress LZMA data
 		/// </summary>
 		/// <param name="compressedStream">LZMA compressed stream</param>
 		/// <param name="compressedSize">Compressed data length</param>
 		/// <param name="decompressedStream">Stream for decompressed output</param>
-		public static void DecompressLzmaSizeStream(Stream compressedStream, long compressedSize, Stream decompressedStream)
+		public static void DecompressLzmaSizeStream(MemoryAreaAccessor compressedStream, long compressedSize, MemoryAreaAccessor decompressedStream)
 		{
-			byte[] properties = new byte[PropertiesSize]; //GetBuffer();
-			byte[] sizeBytes = new byte[UncompressedSize]; //GetBuffer();
 			long basePosition = compressedStream.Position;
 
-			compressedStream.ReadBuffer(properties, 0, PropertiesSize);
-			compressedStream.ReadBuffer(sizeBytes, 0, UncompressedSize);
-			long decompressedSize = BitConverter.ToInt64(sizeBytes, 0);
+			var properties = compressedStream.ReadBytes(PropertiesSize);
+			var sizeBytes = compressedStream.ReadBytes(UncompressedSize);
+			long decompressedSize = BitConverter.ToInt64(sizeBytes);
 
 			long headSize = compressedStream.Position - basePosition;
 			long headlessSize = compressedSize - headSize;
@@ -61,9 +93,9 @@ namespace AssetRipper.IO.Files.BundleFiles
 			compressedStream.Position = basePosition + compressedSize;
 		}
 
-		private static void DecompressLzmaStream(byte[] properties, Stream compressedStream, long headlessSize, Stream decompressedStream, long decompressedSize)
+		private static void DecompressLzmaStream(ReadOnlySpan<byte> properties, Stream compressedStream, long headlessSize, Stream decompressedStream, long decompressedSize)
 		{
-			LzmaStream lzmaStream = new LzmaStream(properties, compressedStream, headlessSize, -1, null, false);
+			LzmaStream lzmaStream = new LzmaStream(properties.ToArray(), compressedStream, headlessSize, -1, null, false);
 
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
 			long totalRead = 0;
@@ -83,7 +115,54 @@ namespace AssetRipper.IO.Files.BundleFiles
 			}
 			ArrayPool<byte>.Shared.Return(buffer);
 		}
+		private static void DecompressLzmaStream(ReadOnlySpan<byte> properties, MemoryAreaAccessor access, long headlessSize, Stream decompressedStream, long decompressedSize)
+		{
+			var substr=access.ToStream();
+			LzmaStream lzmaStream = new LzmaStream(properties.ToArray(), substr, headlessSize, -1, null, false);
 
+			byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
+			long totalRead = 0;
+			while (totalRead < decompressedSize)
+			{
+				int toRead = (int)Math.Min(buffer.Length, decompressedSize - totalRead);
+				int read = lzmaStream.Read(buffer, 0, toRead);
+				if (read > 0)
+				{
+					decompressedStream.Write(buffer, 0, read);
+					totalRead += read;
+				}
+				else
+				{
+					break;
+				}
+			}
+			access.Position += substr.Position; // this many consumed
+			ArrayPool<byte>.Shared.Return(buffer);
+		}
+		private static void DecompressLzmaStream(ReadOnlySpan<byte> properties, MemoryAreaAccessor access, long headlessSize, MemoryAreaAccessor decompressedStream, long decompressedSize)
+		{
+			var substr=access.ToStream();
+			LzmaStream lzmaStream = new LzmaStream(properties.ToArray(), substr, headlessSize, -1, null, false);
+
+			byte[] buffer = ArrayPool<byte>.Shared.Rent(1024);
+			long totalRead = 0;
+			while (totalRead < decompressedSize)
+			{
+				int toRead = (int)Math.Min(buffer.Length, decompressedSize - totalRead);
+				int read = lzmaStream.Read(buffer, 0, toRead);
+				if (read > 0)
+				{
+					decompressedStream.Write(buffer, 0, read);
+					totalRead += read;
+				}
+				else
+				{
+					break;
+				}
+			}
+			access.Position += substr.Position; // this many consumed
+			ArrayPool<byte>.Shared.Return(buffer);
+		}
 		/// <summary>
 		/// Compress some data with LZMA.
 		/// </summary>

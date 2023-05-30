@@ -44,29 +44,24 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser
 		/// </summary>
 		public static bool HasRefTypes(FormatVersion generation) => generation >= FormatVersion.SupportsRefObject;
 
-		public void Read(SmartStream stream, SerializedFileHeader header)
+        public void Read(MemoryAreaAccessor stream, SerializedFileHeader header)
 		{
 			bool swapEndianess = ReadSwapEndianess(stream, header);
 			EndianType endianess = swapEndianess ? EndianType.BigEndian : EndianType.LittleEndian;
-			using SerializedReader reader = new SerializedReader(stream, endianess, header.Version);
+            SerializedReader reader = new SerializedReader(stream, endianess, header.Version);
 			Read(reader);
 		}
 
-		private bool ReadSwapEndianess(SmartStream stream, SerializedFileHeader header)
+        private bool ReadSwapEndianess(MemoryAreaAccessor stream, SerializedFileHeader header)
 		{
-			if (HasEndian(header.Version))
-			{
-				int num = stream.ReadByte();
-				return num switch
-				{
-					< 0 => throw new EndOfStreamException(),
-					_ => SwapEndianess = num != 0,
-				};
-			}
-			else
+            if (!HasEndian(header.Version))
 			{
 				return header.Endianess;
 			}
+            int num = stream.ReadByte();
+            if (num < 0)
+                throw new EndOfStreamException();
+            return SwapEndianess = num != 0;
 		}
 
 		public void Write(Stream stream, SerializedFileHeader header)

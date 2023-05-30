@@ -37,7 +37,7 @@ namespace AssetRipper.Export.UnityProjects.Audio
 			}
 			else
 			{
-				File.WriteAllBytes(path, data);
+				File.WriteAllBytes(path, data.ToArray());
 				return true;
 			}
 		}

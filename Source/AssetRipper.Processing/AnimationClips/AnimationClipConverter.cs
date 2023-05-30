@@ -1,5 +1,6 @@
 using AssetRipper.Assets.IO.Reading;
 using AssetRipper.Assets.Utils;
+using AssetRipper.IO;
 using AssetRipper.Processing.AnimationClips.Editor;
 using AssetRipper.SourceGenerated;
 using AssetRipper.SourceGenerated.Classes.ClassID_74;
@@ -546,18 +547,23 @@ namespace AssetRipper.Processing.AnimationClips
 
 		public IReadOnlyList<StreamedFrame> GenerateFramesFromStreamedClip(StreamedClip clip)
 		{
-			List<StreamedFrame> frames = new List<StreamedFrame>();
-			byte[] memStreamBuffer = new byte[clip.Data.Length * sizeof(uint)];
-			Buffer.BlockCopy(clip.Data, 0, memStreamBuffer, 0, memStreamBuffer.Length);
-			using MemoryStream stream = new MemoryStream(memStreamBuffer);
-			using AssetReader reader = new AssetReader(stream, m_clip.Collection);
-			while (reader.BaseStream.Position < reader.BaseStream.Length)
+			List<StreamedFrame> frames = new();
+			unsafe
 			{
-				StreamedFrame frame = new StreamedFrame();
-				frame.Read(reader);
-				frames.Add(frame);
+				fixed (uint* memStreamBufferPtr = clip.Data)
+				{
+					var srcData = new MemoryAreaAccessor((byte*)memStreamBufferPtr, 0, clip.Data.Length * sizeof(uint));
+					AssetReader reader = new AssetReader(srcData, m_clip.Collection);
+					while (reader.Position < reader.Length)
+					{
+						StreamedFrame frame = new StreamedFrame();
+						frame.Read(reader);
+						frames.Add(frame);
+					}
+
+					return frames;
+				}
 			}
-			return frames;
 		}
 
 		private UnityVersion Version => m_clip.Collection.Version;

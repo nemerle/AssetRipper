@@ -6,7 +6,7 @@ namespace AssetRipper.IO.Files.BundleFiles.Archive
 	{
 		public ArchiveBundleHeader Header { get; } = new();
 
-		public override void Read(SmartStream stream)
+		public override void Read(MemoryAreaAccessor stream)
 		{
 			throw new NotSupportedException();
 		}

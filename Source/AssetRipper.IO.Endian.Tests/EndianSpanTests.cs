@@ -16,7 +16,7 @@ public partial class EndianSpanTests
 		writer.Write(sourceSpan);
 		Assert.That(writer.Position, Is.EqualTo(Length));
 
-		EndianSpanReader reader = new EndianSpanReader(targetSpan, endianType);
+		EndianReader reader = new EndianReader(targetSpan, endianType);
 		Assert.That(reader.Length, Is.EqualTo(Length));
 		ReadOnlySpan<byte> readSpan = reader.ReadBytesExact(Length);
 		Assert.That(reader.Position, Is.EqualTo(Length));
@@ -35,7 +35,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(2 * sizeof(int)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Position, Is.EqualTo(0));
 		Assert.That(reader.ReadInt32(), Is.EqualTo(0));
 		Assert.That(reader.Position, Is.EqualTo(sizeof(int)));
@@ -61,7 +61,7 @@ public partial class EndianSpanTests
 		writer.WriteUtf8String(value1);
 		Assert.That(writer.Position, Is.EqualTo(length));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(length));
 		Utf8String value2 = reader.ReadUtf8String();
 		Assert.That(reader.Position, Is.EqualTo(length));
@@ -80,7 +80,7 @@ public partial class EndianSpanTests
 		writer.WriteUtf8String(value1);
 		Assert.That(writer.Position, Is.EqualTo(length));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(length));
 		Utf8String value2 = reader.ReadUtf8String();
 		Assert.That(reader.Position, Is.EqualTo(length));
@@ -102,7 +102,7 @@ public partial class EndianSpanTests
 		writer.WriteNullTerminatedString(value1);
 		Assert.That(writer.Position, Is.EqualTo(length));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(length));
 		reader.Position = Offset;
 		Utf8String value2 = reader.ReadNullTerminatedString();
@@ -122,7 +122,7 @@ public partial class EndianSpanTests
 		writer.WritePrimitive<T>(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeOfT));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeOfT));
 		T value2 = reader.ReadPrimitive<T>();
 		Assert.That(reader.Position, Is.EqualTo(sizeOfT));

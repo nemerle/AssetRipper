@@ -2,6 +2,7 @@
 using AssetRipper.IO.Files.BundleFiles.FileStream;
 using AssetRipper.IO.Files.BundleFiles.RawWeb.Raw;
 using AssetRipper.IO.Files.BundleFiles.RawWeb.Web;
+using AssetRipper.IO.Files.Streams.MultiFile;
 using AssetRipper.IO.Files.Streams.Smart;
 using System.Diagnostics;
 
@@ -42,11 +43,11 @@ namespace AssetRipper.IO.Files.BundleFiles
 		private protected static bool IsBundleHeader(EndianReader reader, string magicString)
 		{
 			const int MaxLength = 0x20;
-			if (reader.BaseStream.Length >= MaxLength)
+			if (reader.Accessor.Length >= MaxLength)
 			{
-				long position = reader.BaseStream.Position;
+				long position = reader.Accessor.Position;
 				bool isRead = reader.ReadStringZeroTerm(MaxLength, out string? signature);
-				reader.BaseStream.Position = position;
+				reader.Accessor.Position = position;
 				return isRead && signature == magicString;
 			}
 			return false;
@@ -54,8 +55,8 @@ namespace AssetRipper.IO.Files.BundleFiles
 
 		public static bool IsBundleHeader(string path)
 		{
-			using SmartStream stream = SmartStream.OpenRead(path);
-			using EndianReader reader = new EndianReader(stream, EndianType.BigEndian);
+			var mmfw = MultiFileStream.OpenReadSingle(path);
+			var reader = new EndianReader(mmfw.CreateAccessor(), EndianType.BigEndian);
 			return FileStreamBundleHeader.IsBundleHeader(reader)
 				|| RawBundleHeader.IsBundleHeader(reader)
 				|| WebBundleHeader.IsBundleHeader(reader);

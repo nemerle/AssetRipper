@@ -3,6 +3,7 @@ using AssetRipper.Assets.Cloning;
 using AssetRipper.Assets.Export;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.Export.UnityProjects.Project.Collections;
+using AssetRipper.IO;
 using AssetRipper.SourceGenerated.Classes.ClassID_1042;
 using AssetRipper.SourceGenerated.Classes.ClassID_128;
 using AssetRipper.SourceGenerated.Classes.ClassID_21;
@@ -64,8 +65,8 @@ namespace AssetRipper.Export.UnityProjects.Miscellaneous
 
 		protected override string GetExportExtension(IUnityObjectBase asset)
 		{
-			byte[] fontData = ((IFont)asset).FontData_C128;
-			uint type = BitConverter.ToUInt32(fontData, 0);
+			MemoryAreaAccessor fontData = ((IFont)asset).FontData_C128;
+			uint type = fontData.CloneClean().Read<uint>();
 			return type == OttoAsciiFourCC ? "otf" : "ttf";
 		}
 

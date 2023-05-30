@@ -1,4 +1,5 @@
-﻿using AssetRipper.SourceGenerated.Classes.ClassID_28;
+﻿using AssetRipper.IO;
+using AssetRipper.SourceGenerated.Classes.ClassID_28;
 using AssetRipper.SourceGenerated.Enums;
 
 namespace AssetRipper.SourceGenerated.Extensions
@@ -38,25 +39,27 @@ namespace AssetRipper.SourceGenerated.Extensions
 			}
 		}
 
-		public static byte[] GetImageData(this ITexture2D texture)
+		public static ReadOnlySpan<byte> GetImageData(this ITexture2D texture)
 		{
-			byte[] data = texture.ImageData_C28;
+			ReadOnlySpan<byte> data = texture.ImageData_C28.CleanSpan();
 
 			if (data.Length != 0)
 			{
-				return texture.ImageData_C28;
+				return data;
 			}
 			else if (texture.StreamData_C28 is not null && texture.StreamData_C28.IsSet())
 			{
-				data = texture.StreamData_C28.GetContent(texture.Collection);
+				data = texture.StreamData_C28.GetContent(texture.Collection).CleanSpan();
 			}
 
 			if (IsSwapBytes(texture.Collection.Platform, texture.Format_C28E))
 			{
+				var changed_data = data.ToArray();
 				for (int i = 0; i < data.Length; i += 2)
 				{
-					(data[i], data[i + 1]) = (data[i + 1], data[i]);
+					(changed_data[i], changed_data[i + 1]) = (changed_data[i + 1], changed_data[i]);
 				}
+				return changed_data;
 			}
 
 			return data;

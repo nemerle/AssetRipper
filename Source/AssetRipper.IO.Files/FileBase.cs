@@ -28,15 +28,17 @@ namespace AssetRipper.IO.Files
 		}
 		public string NameFixed { get; private set; } = string.Empty;
 		private string name = string.Empty;
-		public abstract void Read(SmartStream stream);
+		public abstract void Read(MemoryAreaAccessor stream);
 		public abstract void Write(Stream stream);
 		public virtual void ReadContents() { }
 		public virtual void ReadContentsRecursively() => ReadContents();
-		public virtual byte[] ToByteArray()
+		public virtual MemoryAreaAccessor ToCleanStream()
 		{
 			MemoryStream memoryStream = new();
 			Write(memoryStream);
-			return memoryStream.ToArray();
+			MemoryAreaAccessor memoryView = new(memoryStream.Length);
+			memoryView.Write(memoryStream.GetBuffer());
+			return memoryView;
 		}
 
 		~FileBase() => Dispose(false);

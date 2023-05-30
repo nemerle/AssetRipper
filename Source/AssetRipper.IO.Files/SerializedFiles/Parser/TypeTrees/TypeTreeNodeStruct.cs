@@ -110,40 +110,37 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees
 				//Has no sub nodes
 				return new TypeTreeNodeStruct(node, Array.Empty<TypeTreeNodeStruct>());
 			}
-			else
+			Debug.Assert(list[index + 1].Level == level + 1);
+			int subNodeCount = 0;
+			for (int i = index + 1; i < list.Count; i++)
 			{
-				Debug.Assert(list[index + 1].Level == level + 1);
-				int subNodeCount = 0;
-				for (int i = index + 1; i < list.Count; i++)
+				int subNodeLevel = list[i].Level;
+				if (subNodeLevel == level + 1)
 				{
-					int subNodeLevel = list[i].Level;
-					if (subNodeLevel == level + 1)
-					{
-						subNodeCount++;
-					}
-					else if (subNodeLevel <= level)
-					{
-						break;
-					}
+					subNodeCount++;
 				}
-				TypeTreeNodeStruct[] subNodes = new TypeTreeNodeStruct[subNodeCount];
-				int subNodeIndex = 0;
-				for (int i = index + 1; i < list.Count; i++)
+				else if (subNodeLevel <= level)
 				{
-					int subNodeLevel = list[i].Level;
-					if (subNodeLevel == level + 1)
-					{
-						subNodes[subNodeIndex] = FromNodeList(list, i);
-						subNodeIndex++;
-					}
-					else if (subNodeLevel <= level)
-					{
-						break;
-					}
+					break;
 				}
-				Debug.Assert(subNodeIndex == subNodeCount);
-				return new TypeTreeNodeStruct(node, subNodes);
 			}
+			TypeTreeNodeStruct[] subNodes = new TypeTreeNodeStruct[subNodeCount];
+			int subNodeIndex = 0;
+			for (int i = index + 1; i < list.Count; i++)
+			{
+				int subNodeLevel = list[i].Level;
+				if (subNodeLevel == level + 1)
+				{
+					subNodes[subNodeIndex] = FromNodeList(list, i);
+					subNodeIndex++;
+				}
+				else if (subNodeLevel <= level)
+				{
+					break;
+				}
+			}
+			Debug.Assert(subNodeIndex == subNodeCount);
+			return new TypeTreeNodeStruct(node, subNodes);
 		}
 	}
 }

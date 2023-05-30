@@ -41,7 +41,9 @@ public static class GZipFileTests
 			Assert.That(memoryStream.Position, Is.GreaterThan(0));
 			Assert.That(memoryStream.IsNull, Is.False);
 		});
-		byte[] decompressedData = newFile.UncompressedFile!.ToByteArray();
+		Stream cl = newFile.UncompressedFile!.ToCleanStream();
+		byte[] decompressedData = new byte[cl.Length];
+		cl.Read(decompressedData);
 		Assert.That(decompressedData, Is.EqualTo(randomData));
 	}
 }

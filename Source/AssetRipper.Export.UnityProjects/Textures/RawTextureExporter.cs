@@ -25,7 +25,7 @@ namespace AssetRipper.Export.UnityProjects.Textures
 
 		public override bool Export(IExportContainer container, IUnityObjectBase asset, string path)
 		{
-			File.WriteAllBytes(path, ((ITexture2D)asset).GetImageData());
+			File.WriteAllBytes(path, ((ITexture2D)asset).GetImageData().ToArray());
 			return true;
 		}
 	}

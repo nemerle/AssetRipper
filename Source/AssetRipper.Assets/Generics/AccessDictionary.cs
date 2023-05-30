@@ -1,3 +1,5 @@
+using System.Collections;
+
 ﻿namespace AssetRipper.Assets.Generics
 {
 	/// <summary>

@@ -7,6 +7,7 @@ using AssetRipper.Assets.IO.Reading;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.IO.Endian;
 using AssetRipper.IO.Files;
+using AssetRipper.IO;
 using AssetRipper.IO.Files.SerializedFiles;
 using AssetRipper.IO.Files.SerializedFiles.Parser;
 using AssetRipper.IO.Files.Utils;
@@ -107,7 +108,7 @@ namespace AssetRipper.Tools.RawTextureExtractor
 					string uniqueName = FileUtils.GetUniqueName(collectionOutputPath, name, FileUtils.MaxFilePathLength - txtExtension.Length);
 					string dataFilePath = Path.Combine(collectionOutputPath, uniqueName);
 					string infoFilePath = dataFilePath + txtExtension;
-					File.WriteAllBytes(dataFilePath, data);
+					File.WriteAllBytes(dataFilePath, data.ToArray());
 					StringBuilder sb = new();
 					sb.AppendLine($"Original Name: {originalName}");
 					sb.AppendLine($"Type: {texture.ClassName}");
@@ -153,12 +154,12 @@ namespace AssetRipper.Tools.RawTextureExtractor
 
 		private sealed class TextureAssetFactory : AssetFactoryBase
 		{
-			public override IUnityObjectBase? ReadAsset(AssetInfo assetInfo, ReadOnlyArraySegment<byte> assetData, SerializedType? assetType)
+			public override IUnityObjectBase? ReadAsset(AssetInfo assetInfo, MemoryAreaAccessor assetData, SerializedType? assetType)
 			{
 				IUnityObjectBase? asset = CreateAsset(assetInfo);
 				if (asset is not null)
 				{
-					EndianSpanReader reader = new EndianSpanReader(assetData, asset.Collection.EndianType);
+					EndianReader reader = new EndianReader(assetData, asset.Collection.EndianType);
 					return TryReadAsset(ref reader, asset.Collection.Flags, asset);
 				}
 				else
@@ -177,7 +178,7 @@ namespace AssetRipper.Tools.RawTextureExtractor
 				};
 			}
 
-			private static IUnityObjectBase? TryReadAsset(ref EndianSpanReader reader, TransferInstructionFlags flags, IUnityObjectBase asset)
+			private static IUnityObjectBase? TryReadAsset(ref EndianReader reader, TransferInstructionFlags flags, IUnityObjectBase asset)
 			{
 				try
 				{

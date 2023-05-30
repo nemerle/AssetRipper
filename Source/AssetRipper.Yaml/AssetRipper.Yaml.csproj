@@ -6,4 +6,8 @@
 		<IntermediateOutputPath>..\Bins\obj\AssetRipper.Yaml\$(Configuration)\</IntermediateOutputPath>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\AssetRipper.IO.Files\AssetRipper.IO.Files.csproj" />
+	</ItemGroup>
+
 </Project>

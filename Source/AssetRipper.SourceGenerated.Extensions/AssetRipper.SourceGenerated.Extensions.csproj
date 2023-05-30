@@ -9,13 +9,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\AssetRipper.Assets\AssetRipper.Assets.csproj" />
 		<ProjectReference Include="..\AssetRipper.Numerics\AssetRipper.Numerics.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="AssetRipper.SourceGenerated">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>../Libraries/AssetRipper.SourceGenerated.dll</HintPath>
-		</Reference>
+		<ProjectReference Include="..\AssetRipper.SourceGenerated\AssetRipper.SourceGenerated.csproj" />
 	</ItemGroup>
 
 </Project>

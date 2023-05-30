@@ -36,7 +36,7 @@ namespace AssetRipper.Export.Modules.Shaders.Exporters
 			}
 			ExportText(writer, characters.ToArray());
 		}
-		protected static void ExportText(TextWriter writer, char[] array)
+		protected static void ExportText(TextWriter writer, ReadOnlySpan<char> array)
 		{
 			for (int i = 0; i < array.Length; i++)
 			{

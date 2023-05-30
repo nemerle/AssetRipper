@@ -14,7 +14,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(short)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(short)));
 		short value2 = reader.ReadInt16();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(short)));
@@ -32,7 +32,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(ushort)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(ushort)));
 		ushort value2 = reader.ReadUInt16();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(ushort)));
@@ -50,7 +50,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(int)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(int)));
 		int value2 = reader.ReadInt32();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(int)));
@@ -68,7 +68,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(uint)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(uint)));
 		uint value2 = reader.ReadUInt32();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(uint)));
@@ -86,7 +86,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(long)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(long)));
 		long value2 = reader.ReadInt64();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(long)));
@@ -104,7 +104,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(ulong)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(ulong)));
 		ulong value2 = reader.ReadUInt64();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(ulong)));
@@ -122,7 +122,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(ushort)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(ushort)));
 		Half value2 = reader.ReadHalf();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(ushort)));
@@ -140,7 +140,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(float)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(float)));
 		float value2 = reader.ReadSingle();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(float)));
@@ -158,7 +158,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(double)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(double)));
 		double value2 = reader.ReadDouble();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(double)));
@@ -176,7 +176,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(bool)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(bool)));
 		bool value2 = reader.ReadBoolean();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(bool)));
@@ -194,7 +194,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(byte)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(byte)));
 		byte value2 = reader.ReadByte();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(byte)));
@@ -212,7 +212,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(sbyte)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(sbyte)));
 		sbyte value2 = reader.ReadSByte();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(sbyte)));
@@ -230,7 +230,7 @@ public partial class EndianSpanTests
 		writer.Write(value1);
 		Assert.That(writer.Position, Is.EqualTo(sizeof(char)));
 
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		Assert.That(reader.Length, Is.EqualTo(sizeof(char)));
 		char value2 = reader.ReadChar();
 		Assert.That(reader.Position, Is.EqualTo(sizeof(char)));

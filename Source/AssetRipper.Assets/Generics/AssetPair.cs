@@ -2,13 +2,14 @@
 {
 	public sealed class AssetPair<TKey, TValue> : AccessPairBase<TKey, TValue>
 		where TKey : notnull, new()
-		where TValue : notnull, new()
+        where TValue : notnull
 	{
-		public AssetPair() : this(new(), new())
+        public AssetPair() 
 		{
+			Key = new TKey();
 		}
 
-		public AssetPair(KeyValuePair<TKey, TValue> pair) : this(pair.Key, pair.Value)
+        public AssetPair(ref KeyValuePair<TKey, TValue> pair) : this(pair.Key, pair.Value)
 		{
 		}
 

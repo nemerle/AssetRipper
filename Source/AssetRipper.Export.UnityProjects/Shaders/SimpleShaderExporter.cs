@@ -29,7 +29,7 @@ namespace AssetRipper.Export.UnityProjects.Shaders
 
 		public override bool Export(IExportContainer container, IUnityObjectBase asset, string path)
 		{
-			File.WriteAllBytes(path, ((ITextAsset)asset).Script_C49.Data);
+			File.WriteAllBytes(path, ((ITextAsset)asset).Script_C49.Data.CleanSpan().ToArray());
 			return true;
 		}
 

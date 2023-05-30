@@ -1,5 +1,6 @@
 ﻿using AssetRipper.Assets.Interfaces;
 using AssetRipper.Assets.Metadata;
+using AssetRipper.IO;
 
 namespace AssetRipper.Import.AssetCreation
 {
@@ -11,6 +12,6 @@ namespace AssetRipper.Import.AssetCreation
 			set { }
 		}
 
-		public UnknownObject(AssetInfo assetInfo, byte[] data) : base(assetInfo, data) { }
+		public UnknownObject(AssetInfo assetInfo, MemoryAreaAccessor data) : base(assetInfo, data) { }
 	}
 }

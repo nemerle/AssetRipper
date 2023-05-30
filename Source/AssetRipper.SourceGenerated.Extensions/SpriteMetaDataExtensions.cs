@@ -1,4 +1,5 @@
 ﻿using AssetRipper.Assets.Generics;
+using AssetRipper.IO;
 using AssetRipper.Numerics;
 using AssetRipper.SourceGenerated.Classes.ClassID_213;
 using AssetRipper.SourceGenerated.Classes.ClassID_687078895;
@@ -13,6 +14,7 @@ using AssetRipper.SourceGenerated.Subclasses.Vector2f;
 using System.Buffers.Binary;
 using System.Drawing;
 using System.Numerics;
+using AssetRipper.IO.Files;
 
 namespace AssetRipper.SourceGenerated.Extensions
 {
@@ -123,7 +125,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 				for (int i = 0, j = 0; i < origin.RD_C213.IndexBuffer.Length / 2; i++, j += 2)
 				{
 					//Endianness might matter here
-					instance.Indices[i] = BinaryPrimitives.ReadInt16LittleEndian(origin.RD_C213.IndexBuffer.AsSpan(j, 2));
+					instance.Indices[i] = BinaryPrimitives.ReadInt16LittleEndian(origin.RD_C213.IndexBuffer.CleanSpan().Slice(j, 2));
 				}
 			}
 
@@ -321,14 +323,15 @@ namespace AssetRipper.SourceGenerated.Extensions
 			return outlineGenerator.GenerateOutlines();
 		}
 
-		private static List<Vector2[]> VertexDataToOutline(byte[] indexBuffer, Vector3[] vertices, ISubMesh submesh)
+		private static List<Vector2[]> VertexDataToOutline(MemoryAreaAccessor indexBuffer, Vector3[] vertices, ISubMesh submesh)
 		{
 			Vector3i[] triangles = new Vector3i[submesh.IndexCount / 3];
+			var loc = indexBuffer.CloneClean().CreateSubAccessor(submesh.FirstByte, triangles.Length * 6);
 			for (int o = (int)submesh.FirstByte, ti = 0; ti < triangles.Length; o += 6, ti++)
 			{
-				int x = BitConverter.ToUInt16(indexBuffer, o + 0);
-				int y = BitConverter.ToUInt16(indexBuffer, o + 2);
-				int z = BitConverter.ToUInt16(indexBuffer, o + 4);
+				int x = loc.Read<ushort>();//BitConverter.ToUInt16(indexBuffer, o + 0);
+				int y = loc.Read<ushort>();;
+				int z = loc.Read<ushort>();;
 				triangles[ti] = new Vector3i(x, y, z);
 			}
 			MeshOutlineGenerator outlineGenerator = new MeshOutlineGenerator(vertices, triangles);

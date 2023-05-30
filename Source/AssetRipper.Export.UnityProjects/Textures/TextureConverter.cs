@@ -21,7 +21,7 @@ namespace AssetRipper.Export.UnityProjects.Textures
 	{
 		public static DirectBitmap? ConvertToBitmap(ITexture3D texture)
 		{
-			byte[] buffer = texture.GetImageData();
+			ReadOnlySpan<byte> buffer = texture.GetImageData();
 			if (buffer.Length == 0)
 			{
 				return null;
@@ -52,7 +52,7 @@ namespace AssetRipper.Export.UnityProjects.Textures
 
 		public static DirectBitmap? ConvertToBitmap(ITexture2DArray texture)
 		{
-			byte[] buffer = texture.GetImageData();
+			ReadOnlySpan<byte> buffer = texture.GetImageData();
 			if (buffer.Length == 0)
 			{
 				return null;
@@ -70,7 +70,7 @@ namespace AssetRipper.Export.UnityProjects.Textures
 
 		public static DirectBitmap? ConvertToBitmap(ITexture2D texture)
 		{
-			byte[] buffer = texture.GetImageData();
+			ReadOnlySpan<byte> buffer = texture.GetImageData();
 			if (buffer.Length == 0)
 			{
 				return null;
@@ -106,7 +106,7 @@ namespace AssetRipper.Export.UnityProjects.Textures
 			int depth,
 			int imageSize,
 			UnityVersion version,
-			byte[] data)
+			ReadOnlySpan<byte> data)
 		{
 			if (width <= 0 || height <= 0 || depth <= 0)
 			{
@@ -119,7 +119,7 @@ namespace AssetRipper.Export.UnityProjects.Textures
 				int outputSize = width * height * DirectBitmap.PixelSize;
 				for (int i = 0; i < depth; i++)
 				{
-					ReadOnlySpan<byte> inputSpan = new ReadOnlySpan<byte>(data, i * imageSize, imageSize);
+					ReadOnlySpan<byte> inputSpan = data.Slice( i * imageSize, imageSize);
 					ReadOnlySpan<byte> uncompressedSpan;
 					if (textureFormat.IsCrunched())
 					{

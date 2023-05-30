@@ -99,13 +99,13 @@ namespace AssetRipper.SourceGenerated.Extensions
 			uv6 = default;
 			uv7 = default;
 
-			byte[] data;
+			ReadOnlySpan<byte> data;
 
 			if (instance.Data.Length == 0)
 			{
 				if (mesh?.StreamData_C43 is not null)
 				{
-					data = mesh.StreamData_C43.GetContent(mesh.Collection);
+					data = mesh.StreamData_C43.GetContent(mesh.Collection).CleanSpan();
 					if (data.Length == 0)
 					{
 						return;
@@ -118,7 +118,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			}
 			else
 			{
-				data = instance.Data;
+				data = instance.Data.CleanSpan();
 			}
 
 			IReadOnlyList<ChannelInfo> channels = instance.GetChannels(version);
@@ -147,7 +147,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 							for (int d = 0; d < m_Channel.GetDataDimension(); d++)
 							{
 								int componentOffset = vertexOffset + componentByteSize * d;
-								Buffer.BlockCopy(data, componentOffset, componentBytes, componentByteSize * (v * m_Channel.GetDataDimension() + d), componentByteSize);
+								Buffer.BlockCopy(data.ToArray(), componentOffset, componentBytes, componentByteSize * (v * m_Channel.GetDataDimension() + d), componentByteSize);
 							}
 						}
 
@@ -297,8 +297,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int indexStride = instance.Channels.Where(t => t.Stream == indexChannel.Stream).Sum(t => t.GetStride(container.Version));
 			int indexStreamOffset = instance.GetStreamOffset(container.Version, indexChannel.Stream);
 
-			using MemoryStream memStream = new MemoryStream(instance.Data);
-			using BinaryReader reader = new BinaryReader(memStream);
+			var memStream = instance.Data.CloneClean();
 
 			int weightCount = Math.Min((int)weightChannel.GetDataDimension(), 4);
 			int indexCount = Math.Min((int)indexChannel.GetDataDimension(), 4);
@@ -309,13 +308,13 @@ namespace AssetRipper.SourceGenerated.Extensions
 				memStream.Position = weightStreamOffset + v * weightStride + weightChannel.Offset;
 				for (int i = 0; i < weightCount; i++)
 				{
-					weights[i] = reader.ReadSingle();
+					weights[i] = memStream.Read<float>();
 				}
 
 				memStream.Position = indexStreamOffset + v * indexStride + indexChannel.Offset;
 				for (int i = 0; i < indexCount; i++)
 				{
-					indices[i] = reader.ReadInt32();
+					indices[i] = memStream.Read<int>();
 				}
 
 				skin[v] = new BoneWeight4(weights[0], weights[1], weights[2], weights[3], indices[0], indices[1], indices[2], indices[3]);
@@ -341,18 +340,15 @@ namespace AssetRipper.SourceGenerated.Extensions
 			Vector3[] verts = new Vector3[submesh.VertexCount];
 			int streamStride = instance.Channels.Where(t => t.Stream == channel.Stream).Sum(t => t.GetStride(version));
 			int streamOffset = instance.GetStreamOffset(version, channel.Stream);
-			using (MemoryStream memStream = new MemoryStream(instance.Data))
+			var memStream = instance.Data.CloneClean();
+			memStream.Position = streamOffset + submesh.FirstVertex * streamStride + channel.Offset;
+			for (int v = 0; v < submesh.VertexCount; v++)
 			{
-				using BinaryReader reader = new BinaryReader(memStream);
-				memStream.Position = streamOffset + submesh.FirstVertex * streamStride + channel.Offset;
-				for (int v = 0; v < submesh.VertexCount; v++)
-				{
-					float x = reader.ReadSingle();
-					float y = reader.ReadSingle();
-					float z = reader.ReadSingle();
-					verts[v] = new Vector3(x, y, z);
-					memStream.Position += streamStride - 12;
-				}
+			float x = memStream.Read<float>();
+			float y = memStream.Read<float>();
+			float z = memStream.Read<float>();
+				verts[v] = new Vector3(x, y, z);
+				memStream.Position += streamStride - 12;
 			}
 			return verts;
 		}

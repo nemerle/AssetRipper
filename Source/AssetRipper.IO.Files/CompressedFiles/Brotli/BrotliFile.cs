@@ -9,7 +9,7 @@ namespace AssetRipper.IO.Files.CompressedFiles.Brotli
 	{
 		private const string BrotliSignature = "UnityWeb Compressed Content (brotli)";
 
-		public override void Read(SmartStream stream)
+		public override void Read(MemoryAreaAccessor stream)
 		{
 			var buffer = ReadBrotli(stream);
 			UncompressedFile = new ResourceFile(buffer, FilePath, Name);
@@ -17,25 +17,25 @@ namespace AssetRipper.IO.Files.CompressedFiles.Brotli
 
 		internal static bool IsBrotliFile(EndianReader reader)
 		{
-			long position = reader.BaseStream.Position;
+			long position = reader.Accessor.Position;
 			string? brotliSignature = ReadBrotliMetadata(reader);
-			reader.BaseStream.Position = position;
+			reader.Accessor.Position = position;
 			return brotliSignature == BrotliSignature;
 		}
 
 		private static string? ReadBrotliMetadata(EndianReader reader)
 		{
-			long remaining = reader.BaseStream.Length - reader.BaseStream.Position;
+			long remaining = reader.Accessor.Length - reader.Accessor.Position;
 			if (remaining < 4)
 			{
 				return null;
 			}
 
-			reader.BaseStream.Position += 1;
+			reader.Accessor.Position += 1;
 			byte bt = reader.ReadByte(); // read 3 bits
 			int sizeBytes = bt & 0x3;
 
-			if (reader.BaseStream.Position + sizeBytes > reader.BaseStream.Length)
+			if (reader.Accessor.Position + sizeBytes > reader.Accessor.Length)
 			{
 				return null;
 			}
@@ -53,7 +53,7 @@ namespace AssetRipper.IO.Files.CompressedFiles.Brotli
 			{
 				return null;
 			}
-			if (reader.BaseStream.Position + length > reader.BaseStream.Length)
+			if (reader.Accessor.Position + length > reader.Accessor.Length)
 			{
 				return null;
 			}
@@ -61,12 +61,14 @@ namespace AssetRipper.IO.Files.CompressedFiles.Brotli
 			return reader.ReadString(length);
 		}
 
-		private static byte[] ReadBrotli(Stream stream)
+		private static MemoryAreaAccessor ReadBrotli(MemoryAreaAccessor stream)
 		{
 			using MemoryStream memoryStream = new MemoryStream();
-			using BrotliStream brotliStream = new BrotliStream(stream, CompressionMode.Decompress);
+			using BrotliStream brotliStream = new BrotliStream(stream.ToStream(), CompressionMode.Decompress);
 			brotliStream.CopyTo(memoryStream);
-			return memoryStream.ToArray();
+			MemoryAreaAccessor res = new MemoryAreaAccessor(memoryStream.Length);
+			res.Write(memoryStream.ToArray());
+			return res;
 		}
 
 		public override void Write(Stream stream)

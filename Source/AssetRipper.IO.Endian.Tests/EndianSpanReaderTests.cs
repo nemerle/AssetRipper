@@ -1,11 +1,12 @@
 ﻿namespace AssetRipper.IO.Endian.Tests;
+using EndianReader = EndianReader;
 
 public partial class EndianSpanReaderTests
 {
 	[Theory]
 	public void EndianTypeTest(EndianType endianType)
 	{
-		EndianSpanReader reader = new EndianSpanReader(default, endianType);
+		EndianReader reader = new EndianReader(default, endianType);
 		Assert.That(reader.Type, Is.EqualTo(endianType));
 
 		EndianType otherType = endianType == EndianType.BigEndian ? EndianType.LittleEndian : EndianType.BigEndian;
@@ -20,7 +21,7 @@ public partial class EndianSpanReaderTests
 		const int DesiredLength = 64;
 		ReadOnlySpan<byte> sourceSpan = RandomData.NextBytes(SourceLength);
 
-		EndianSpanReader reader = new EndianSpanReader(sourceSpan, endianType);
+		EndianReader reader = new EndianReader(sourceSpan, endianType);
 		Assert.That(reader.Length, Is.EqualTo(SourceLength));
 
 		ReadOnlySpan<byte> readSpan = reader.ReadBytes(DesiredLength);
@@ -42,7 +43,7 @@ public partial class EndianSpanReaderTests
 		ReadOnlySpan<byte> sourceSpan = RandomData.NextBytes(Length);
 		Span<byte> targetSpan = new byte[Length];
 
-		EndianSpanReader reader = new EndianSpanReader(sourceSpan, endianType);
+		EndianReader reader = new EndianReader(sourceSpan, endianType);
 		Assert.That(reader.Length, Is.EqualTo(Length));
 
 		ReadOnlySpan<byte> readSpan = reader.ReadBytesExact(Length);
@@ -59,7 +60,7 @@ public partial class EndianSpanReaderTests
 	[Theory]
 	public void ReadBytesWorksForZeroLengthReading(EndianType endianType)
 	{
-		EndianSpanReader reader = new EndianSpanReader(default, endianType);
+		EndianReader reader = new EndianReader(default, endianType);
 		Assert.That(reader.Length, Is.EqualTo(0));
 
 		Assert.That(reader.ReadBytes(0).Length, Is.EqualTo(0));
@@ -74,12 +75,12 @@ public partial class EndianSpanReaderTests
 	{
 		Assert.Throws<ArgumentOutOfRangeException>(() =>
 		{
-			EndianSpanReader reader = new EndianSpanReader(default, endianType);
+			EndianReader reader = new EndianReader(default, endianType);
 			reader.ReadBytes(-1);
 		});
 		Assert.Throws<ArgumentOutOfRangeException>(() =>
 		{
-			EndianSpanReader reader = new EndianSpanReader(default, endianType);
+			EndianReader reader = new EndianReader(default, endianType);
 			reader.ReadBytesExact(-1);
 		});
 	}
@@ -89,7 +90,7 @@ public partial class EndianSpanReaderTests
 	{
 		Assert.DoesNotThrow(() =>
 		{
-			EndianSpanReader reader = new EndianSpanReader(default, endianType);
+			EndianReader reader = new EndianReader(default, endianType);
 			reader.Align();
 		});
 	}
@@ -98,7 +99,7 @@ public partial class EndianSpanReaderTests
 	public void AlignMovesPositionToMultipleOfFour(EndianType endianType)
 	{
 		Span<byte> data = stackalloc byte[6];
-		EndianSpanReader reader = new EndianSpanReader(data, endianType);
+		EndianReader reader = new EndianReader(data, endianType);
 		for (int i = 1; i <= 4; i++)
 		{
 			reader.Position = i;

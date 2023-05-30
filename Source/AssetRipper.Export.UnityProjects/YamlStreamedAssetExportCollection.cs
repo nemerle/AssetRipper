@@ -2,6 +2,7 @@
 using AssetRipper.Assets.Export;
 using AssetRipper.Export.UnityProjects.Project.Collections;
 using AssetRipper.Export.UnityProjects.Project.Exporters;
+using AssetRipper.IO;
 using AssetRipper.SourceGenerated.Classes.ClassID_117;
 using AssetRipper.SourceGenerated.Classes.ClassID_187;
 using AssetRipper.SourceGenerated.Classes.ClassID_188;
@@ -49,7 +50,7 @@ namespace AssetRipper.Export.UnityProjects
 					mesh.VertexData_C43.Data = mesh.StreamData_C43.GetContent(mesh.Collection);
 					mesh.StreamData_C43.ClearValues();
 					result = base.ExportInner(container, filePath, dirPath);
-					mesh.VertexData_C43.Data = Array.Empty<byte>();
+					mesh.VertexData_C43.Data = MemoryAreaAccessor.Empty;
 				}
 				else
 				{
@@ -84,7 +85,7 @@ namespace AssetRipper.Export.UnityProjects
 					texture.ImageData_C28 = texture.StreamData_C28.GetContent(texture.Collection);
 					texture.StreamData_C28.ClearValues();
 					result = base.ExportInner(container, filePath, dirPath);
-					texture.ImageData_C28 = Array.Empty<byte>();
+					texture.ImageData_C28 = MemoryAreaAccessor.Empty;
 				}
 				else
 				{
@@ -116,7 +117,7 @@ namespace AssetRipper.Export.UnityProjects
 					texture.ImageData_C117 = texture.StreamData_C117.GetContent(texture.Collection);
 					texture.StreamData_C117.ClearValues();
 					result = base.ExportInner(container, filePath, dirPath);
-					texture.ImageData_C117 = Array.Empty<byte>();
+					texture.ImageData_C117 = MemoryAreaAccessor.Empty;
 				}
 				else
 				{
@@ -148,7 +149,7 @@ namespace AssetRipper.Export.UnityProjects
 					texture.ImageData_C187 = texture.StreamData_C187.GetContent(texture.Collection);
 					texture.StreamData_C187.ClearValues();
 					result = base.ExportInner(container, filePath, dirPath);
-					texture.ImageData_C187 = Array.Empty<byte>();
+					texture.ImageData_C187 = MemoryAreaAccessor.Empty;
 				}
 				else
 				{
@@ -180,7 +181,7 @@ namespace AssetRipper.Export.UnityProjects
 					texture.ImageData_C188 = texture.StreamData_C188.GetContent(texture.Collection);
 					texture.StreamData_C188.ClearValues();
 					result = base.ExportInner(container, filePath, dirPath);
-					texture.ImageData_C188 = Array.Empty<byte>();
+					texture.ImageData_C188 = MemoryAreaAccessor.Empty;
 				}
 				else
 				{

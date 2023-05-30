@@ -72,19 +72,13 @@ namespace AssetRipper.IO.Files.SerializedFiles
 
 		public static bool IsSerializedFile(string filePath)
 		{
-			using Stream stream = MultiFileStream.OpenRead(filePath);
-			return IsSerializedFile(stream);
+            using var stream = MultiFileStream.OpenReadSingle(filePath);
+            return IsSerializedFile(stream.CreateAccessor());
 		}
 
-		public static bool IsSerializedFile(byte[] buffer, int offset, int size)
+        public static bool IsSerializedFile(MemoryAreaAccessor stream)
 		{
-			using MemoryStream stream = new MemoryStream(buffer, offset, size, false);
-			return IsSerializedFile(stream);
-		}
-
-		public static bool IsSerializedFile(Stream stream)
-		{
-			using EndianReader reader = new EndianReader(stream, EndianType.BigEndian);
+            var reader = new EndianReader(stream, EndianType.BigEndian);
 			return SerializedFileHeader.IsSerializedFileHeader(reader, stream.Length);
 		}
 
@@ -98,11 +92,11 @@ namespace AssetRipper.IO.Files.SerializedFiles
 			return NameFixed;
 		}
 
-		public override void Read(SmartStream stream)
+        public override void Read(MemoryAreaAccessor stream)
 		{
 			m_assetEntryLookup.Clear();
 
-			using (EndianReader reader = new EndianReader(stream, EndianType.BigEndian))
+            var reader = new EndianReader(stream, EndianType.BigEndian);
 			{
 				Header.Read(reader);
 			}
@@ -114,15 +108,13 @@ namespace AssetRipper.IO.Files.SerializedFiles
 
 			SerializedFileMetadataConverter.CombineFormats(Header.Version, Metadata);
 
+            stream.Position = Header.DataOffset;
 			for (int i = 0; i < Metadata.Object.Length; i++)
 			{
 				ObjectInfo objectInfo = Metadata.Object[i];
 				m_assetEntryLookup.Add(objectInfo.FileID, i);
 
-				stream.Position = Header.DataOffset + objectInfo.ByteStart;
-				byte[] objectData = new byte[objectInfo.ByteSize];
-				stream.ReadExactly(objectData);
-				objectInfo.ObjectData = objectData;
+                objectInfo.ObjectData = stream.CreateSubAccessor(objectInfo.ByteStart, objectInfo.ByteSize);
 			}
 		}
 
@@ -134,8 +126,8 @@ namespace AssetRipper.IO.Files.SerializedFiles
 		public static SerializedFile FromFile(string filePath)
 		{
 			string fileName = Path.GetFileName(filePath);
-			SmartStream stream = SmartStream.OpenRead(filePath);
-			return SerializedFileScheme.Default.Read(stream, filePath, fileName);
+            using var stream = MultiFileStream.OpenReadSingle(filePath);
+            return SerializedFileScheme.Default.Read(stream.CreateAccessor(), filePath, fileName);
 		}
 
 		/// <summary>

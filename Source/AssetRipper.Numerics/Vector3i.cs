@@ -6,6 +6,13 @@ namespace AssetRipper.Numerics
 		public int Y;
 		public int Z;
 
+		public Vector3i()
+		{
+			X = 0;
+			Y = 0;
+			Z = 0;
+		}
+
 		public Vector3i(int x, int y, int z)
 		{
 			X = x;

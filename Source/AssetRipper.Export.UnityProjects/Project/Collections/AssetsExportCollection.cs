@@ -3,6 +3,7 @@ using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.Export;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.Export.UnityProjects.Project.Exporters;
+using AssetRipper.Import.Utils;
 using System.Diagnostics;
 
 namespace AssetRipper.Export.UnityProjects.Project.Collections

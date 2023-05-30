@@ -1,4 +1,5 @@
 ﻿using AssetRipper.IO.Endian;
+using AssetRipper.IO.Files;
 using AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees;
 using System.Text.Json.Nodes;
 
@@ -15,7 +16,7 @@ public sealed class SerializablePair : SerializableEntry
 		Second = second;
 	}
 
-	public override JsonNode Read(ref EndianSpanReader reader)
+	public override JsonNode Read(ref EndianReader reader)
 	{
 		JsonObject result = new()
 		{

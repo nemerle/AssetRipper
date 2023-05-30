@@ -5,7 +5,7 @@ namespace AssetRipper.IO.Files.SerializedFiles.IO
 {
 	public sealed class SerializedReader : EndianReader
 	{
-		public SerializedReader(Stream stream, EndianType endianess, FormatVersion generation) : base(stream, endianess)
+        public SerializedReader(MemoryAreaAccessor stream, EndianType endianess, FormatVersion generation) : base(stream, endianess)
 		{
 			Generation = generation;
 		}

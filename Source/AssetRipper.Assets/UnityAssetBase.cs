@@ -8,6 +8,7 @@ using AssetRipper.Assets.Metadata;
 using AssetRipper.IO.Endian;
 using AssetRipper.Yaml;
 using System.Runtime.CompilerServices;
+using EndianReader = AssetRipper.IO.Endian.EndianReader;
 
 namespace AssetRipper.Assets;
 
@@ -20,9 +21,9 @@ public abstract class UnityAssetBase : IUnityAssetBase, IAssetReadable
 
 	public virtual void ReadRelease(AssetReader reader) => throw MethodNotSupported();
 
-	public virtual void ReadEditor(ref EndianSpanReader reader) => throw MethodNotSupported();
+	public virtual void ReadEditor(ref EndianReader reader) => throw MethodNotSupported();
 
-	public virtual void ReadRelease(ref EndianSpanReader reader) => throw MethodNotSupported();
+	public virtual void ReadRelease(ref EndianReader reader) => throw MethodNotSupported();
 
 	public virtual void WriteEditor(AssetWriter writer) => throw MethodNotSupported();
 

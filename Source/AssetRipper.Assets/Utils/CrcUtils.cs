@@ -6,10 +6,10 @@ namespace AssetRipper.Assets.Utils
 {
 	public static class CrcUtils
 	{
-		public static uint CalculateDigest(byte[] data)
+        public static uint CalculateDigest(ReadOnlySpan<byte> data)
 		{
 			Crc32 crc = new();
-			crc.Update(data);
+			crc.Update(data.ToArray());
 			return (uint)crc.Value;
 		}
 
@@ -32,7 +32,7 @@ namespace AssetRipper.Assets.Utils
 
 		public static uint CalculateDigestUTF8(Utf8StringBase data)
 		{
-			return CalculateDigest(data.Data);
+			return CalculateDigest(data.Data.CleanSpan());
 		}
 
 		public static uint CalculateDigest(byte[] data, int offset, int size)

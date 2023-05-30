@@ -32,12 +32,11 @@ public abstract class TypeTree_New<T> : TypeTree<T> where T : ITypeTreeNode, new
 		}
 		if (stringBufferSize == 0)
 		{
-			StringBuffer = Array.Empty<byte>();
+            StringBuffer = MemoryAreaAccessor.Empty;
 		}
 		else
 		{
-			StringBuffer = new byte[stringBufferSize];
-			reader.Read(StringBuffer, 0, StringBuffer.Length);
+            StringBuffer = reader.takeView<byte>(stringBufferSize);
 		}
 
 		SetNamesFromBuffer();
@@ -51,30 +50,29 @@ public abstract class TypeTree_New<T> : TypeTree<T> where T : ITypeTreeNode, new
 		{
 			node.Write(writer);
 		}
-		writer.Write(StringBuffer, 0, StringBuffer.Length);
+        writer.Write(StringBuffer.CleanSpan().ToArray(), 0, (int)StringBuffer.Length);
 	}
 
 	private void SetNamesFromBuffer()
 	{
-		if (StringBuffer.Length > 0)
+        if (StringBuffer.Length <= 0)
 		{
-			Dictionary<uint, string> customTypes = new();
-			using (MemoryStream stream = new MemoryStream(StringBuffer))
-			{
-				using EndianReader reader = new EndianReader(stream, EndianType.LittleEndian);
-				while (stream.Position < stream.Length)
-				{
-					uint position = (uint)stream.Position;
-					string name = reader.ReadStringZeroTerm();
-					customTypes.Add(position, name);
-				}
-			}
+            return;
+        }
+		Dictionary<uint, string> customTypes = new();
+		var stream = StringBuffer.CloneClean();
+		var reader = new EndianReader(stream, EndianType.LittleEndian);
+		while (stream.Position < stream.Length)
+		{
+			uint position = (uint)stream.Position;
+			string name = reader.ReadStringZeroTerm();
+			customTypes.Add(position, name);
+		}
 
-			foreach (T node in Nodes)
-			{
-				node.Type = GetTypeName(customTypes, node.TypeStrOffset);
-				node.Name = GetTypeName(customTypes, node.NameStrOffset);
-			}
+		foreach (T node in Nodes)
+		{
+			node.Type = GetTypeName(customTypes, node.TypeStrOffset);
+			node.Name = GetTypeName(customTypes, node.NameStrOffset);
 		}
 	}
 

@@ -5,9 +5,9 @@ namespace AssetRipper.IO.Files.CompressedFiles.GZip
 {
 	public sealed class GZipFileScheme : Scheme<GZipFile>
 	{
-		public override bool CanRead(SmartStream stream)
+		public override bool CanRead(MemoryAreaAccessor stream)
 		{
-			using EndianReader reader = new EndianReader(stream, EndianType.BigEndian);
+			EndianReader reader = new EndianReader(stream, EndianType.BigEndian);
 			return GZipFile.IsGZipFile(reader);
 		}
 	}

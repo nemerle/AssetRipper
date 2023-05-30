@@ -3,6 +3,7 @@ using AssetRipper.Assets.Export;
 using AssetRipper.Assets.Generics;
 using AssetRipper.Assets.Interfaces;
 using AssetRipper.Assets.Metadata;
+using AssetRipper.IO;
 using AssetRipper.IO.Files.SerializedFiles;
 using AssetRipper.SourceGenerated.Classes.ClassID_25;
 using AssetRipper.SourceGenerated.Classes.ClassID_29;
@@ -20,7 +21,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 	{
 		public static void Initialize(this IOcclusionCullingData occlusionCullingData, IExportContainer container, IOcclusionCullingSettings cullingSetting)
 		{
-			occlusionCullingData.PVSData_C363 = cullingSetting.PVSData_C29 ?? Array.Empty<byte>();
+			occlusionCullingData.PVSData_C363 = cullingSetting.PVSData_C29 ?? MemoryAreaAccessor.Empty;
 			int renderCount = cullingSetting.StaticRenderers_C29?.Count ?? 0;
 			int portalCount = cullingSetting.Portals_C29?.Count ?? 0;
 			occlusionCullingData.Scenes_C363.InitializeList(1);

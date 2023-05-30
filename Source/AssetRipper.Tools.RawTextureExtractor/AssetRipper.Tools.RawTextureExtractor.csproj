@@ -7,12 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="AssetRipper.SourceGenerated">
-			<HintPath>..\Libraries\AssetRipper.SourceGenerated.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
 		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true" />
 	</ItemGroup>
 

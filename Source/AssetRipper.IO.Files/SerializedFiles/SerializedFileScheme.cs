@@ -6,7 +6,7 @@ namespace AssetRipper.IO.Files.SerializedFiles
 	{
 		public static SerializedFileScheme Default { get; } = new();
 
-		public override bool CanRead(SmartStream stream)
+		public override bool CanRead(MemoryAreaAccessor stream)
 		{
 			return SerializedFile.IsSerializedFile(stream);
 		}

@@ -85,7 +85,7 @@ namespace AssetRipper.IO
                 Buffer.MemoryCopy(srcptr,Memory,_size, src.Length*sizeof(T));
             }
         } 
-        public ReadOnlySpan<byte> getSpan(long size=-1)
+        public ReadOnlySpan<byte> GetSpan(long size=-1)
         {
             if (size == -1)
             {
@@ -93,7 +93,11 @@ namespace AssetRipper.IO
             }
             return new ReadOnlySpan<byte>(Memory+Position, (int)size);
         }
-        public ReadOnlySpan<T> getSpanTyped<T>(long size = -1) where T : unmanaged
+        public ReadOnlySpan<byte> CleanSpan()
+        {
+            return new ReadOnlySpan<byte>(Memory, (int)Length); 
+        }
+        public ReadOnlySpan<T> GetSpanTyped<T>(long size = -1) where T : unmanaged
         {
             if (size == -1)
             {
@@ -134,15 +138,15 @@ namespace AssetRipper.IO
         }
         public void CopyTo(Stream stream)
         {
-            stream.Write(getSpan());
+            stream.Write(GetSpan());
         }
         public void CopyTo(Span<byte> targetSpan)
         {
-            getSpan().CopyTo(targetSpan);
+            GetSpan().CopyTo(targetSpan);
         }
         public ValueTask CopyToAsync(Stream stream)
         {
-            return stream.WriteAsync(getSpan().ToArray());
+            return stream.WriteAsync(GetSpan().ToArray());
         }
         public long Length => _size;
 
@@ -185,8 +189,8 @@ namespace AssetRipper.IO
             {
                 return a.Position == b.Position && a._size == b._size;
             }
-            var span_a = a.CloneClean().getSpan();
-            var span_b = b.CloneClean().getSpan();
+            var span_a = a.CleanSpan();
+            var span_b = b.CleanSpan();
             return span_a.SequenceEqual(span_b);
         }
 
@@ -270,7 +274,7 @@ namespace AssetRipper.IO
         {
             StringBuilder sb = new StringBuilder();
             int count = 0;
-            foreach (byte b in CloneClean().getSpan())
+            foreach (byte b in CleanSpan())
             {
                 sb.Append(b.ToString("X2"));
                 count++;

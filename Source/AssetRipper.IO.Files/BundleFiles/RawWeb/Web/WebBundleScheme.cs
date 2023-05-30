@@ -5,7 +5,7 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb.Web
 {
 	public sealed class WebBundleScheme : Scheme<WebBundleFile>
 	{
-		public override bool CanRead(SmartStream stream)
+		public override bool CanRead(MemoryAreaAccessor stream)
 		{
 			return WebBundleHeader.IsBundleHeader(new EndianReader(stream, EndianType.BigEndian));
 		}

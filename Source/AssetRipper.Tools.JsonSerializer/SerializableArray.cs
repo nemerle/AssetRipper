@@ -1,4 +1,5 @@
 ﻿using AssetRipper.IO.Endian;
+using AssetRipper.IO.Files;
 using AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees;
 using System.Text.Json.Nodes;
 
@@ -13,7 +14,7 @@ public sealed class SerializableArray : SerializableEntry
 
 	public SerializableEntry ElementType { get; }
 
-	public override JsonNode Read(ref EndianSpanReader reader)
+	public override JsonNode Read(ref EndianReader reader)
 	{
 		JsonArray result = new();
 		int size = reader.ReadInt32();

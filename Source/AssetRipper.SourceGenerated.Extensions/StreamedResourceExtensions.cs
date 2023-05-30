@@ -21,28 +21,21 @@ namespace AssetRipper.SourceGenerated.Extensions
 			return file.Bundle.ResolveResource(streamedResource.Source.String) != null;
 		}
 
-		public static byte[]? GetContent(this IStreamedResource streamedResource, AssetCollection file)
+		public static ReadOnlySpan<byte> GetContent(this IStreamedResource streamedResource, AssetCollection file)
 		{
 			ResourceFile? res = file.Bundle.ResolveResource(streamedResource.Source.String);
-			if (res == null)
+			if (res == null || streamedResource.Size == 0)
 			{
-				return null;
+				return ReadOnlySpan<byte>.Empty;
 			}
-			if (streamedResource.Size == 0)
-			{
-				return null;
+			res.MemoryView.Position = (long)streamedResource.Offset;
+			return res.MemoryView.ReadBytes((int)streamedResource.Size);
 			}
 
-			byte[] data = new byte[streamedResource.Size];
-			res.Stream.Position = (long)streamedResource.Offset;
-			res.Stream.ReadBuffer(data, 0, data.Length);
-			return data;
-		}
-
-		public static bool TryGetContent(this IStreamedResource streamedResource, AssetCollection file, [NotNullWhen(true)] out byte[]? data)
+		public static bool TryGetContent(this IStreamedResource streamedResource, AssetCollection file, [NotNullWhen(true)] out ReadOnlySpan<byte> data)
 		{
 			data = streamedResource.GetContent(file);
-			return !data.IsNullOrEmpty();
+			return !data.IsEmpty;
 		}
 
 		public static bool IsSet(this IStreamedResource streamedResource) => !string.IsNullOrEmpty(streamedResource.Source?.String);

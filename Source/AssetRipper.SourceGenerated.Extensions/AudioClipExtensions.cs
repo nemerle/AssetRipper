@@ -6,15 +6,15 @@ namespace AssetRipper.SourceGenerated.Extensions
 {
 	public static class AudioClipExtensions
 	{
-		public static byte[] GetAudioData(this IAudioClip audioClip)
+		public static ReadOnlySpan<byte> GetAudioData(this IAudioClip audioClip)
 		{
 			if (audioClip.Has_AudioData_C83() && audioClip.AudioData_C83.Length > 0)
 			{
-				return audioClip.AudioData_C83;
+				return audioClip.AudioData_C83.CleanSpan();
 			}
 			else if (audioClip.Has_Resource_C83())
 			{
-				return audioClip.Resource_C83.GetContent(audioClip.Collection) ?? Array.Empty<byte>();
+				return audioClip.Resource_C83.GetContent(audioClip.Collection);
 			}
 			//else if (audioClip.StreamingInfo_C83 != null && audioClip.LoadType_C83 == (int)Classes.AudioClip.AudioClipLoadType.Streaming)
 			//{

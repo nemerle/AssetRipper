@@ -77,7 +77,7 @@ namespace AssetRipper.Export.UnityProjects.Shaders
 			else
 			{
 				using BinaryWriter writer = new BinaryWriter(stream);
-				writer.Write(shader.Script_C48.Data);
+				writer.Write(shader.Script_C48.Data.CleanSpan());
 			}
 		}
 	}

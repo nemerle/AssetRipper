@@ -3,8 +3,8 @@ using AssetRipper.Assets.Bundles;
 using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.Interfaces;
 using AssetRipper.Assets.Metadata;
+using AssetRipper.IO;
 using AssetRipper.IO.Files.ResourceFiles;
-using AssetRipper.IO.Files.Streams.Smart;
 
 namespace AssetRipper.GUI
 {
@@ -22,12 +22,12 @@ namespace AssetRipper.GUI
 
 		public override string ClassName => nameof(DummyAssetForLooseResourceFile);
 
-		private readonly SmartStream smartStream;
+		private readonly MemoryAreaAccessor smartStream;
 
 		public DummyAssetForLooseResourceFile(ResourceFile associatedFile) : base(MakeDummyAssetInfo())
 		{
 			AssociatedFile = associatedFile;
-			smartStream = AssociatedFile.Stream.CreateReference();
+			smartStream = AssociatedFile.MemoryView.CreateSubAccessor();
 		}
 
 		public void SaveToFile(string path)
@@ -49,10 +49,6 @@ namespace AssetRipper.GUI
 		{
 			if (!disposedValue)
 			{
-				if (disposing)
-				{
-					smartStream?.Dispose();
-				}
 
 				AssociatedFile?.Dispose();
 				disposedValue = true;

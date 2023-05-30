@@ -6,6 +6,7 @@ using AssetRipper.Assets.Metadata;
 using AssetRipper.Import.Logging;
 using AssetRipper.Import.Structure.Assembly.Mono;
 using AssetRipper.IO.Endian;
+using AssetRipper.IO.Files;
 using AssetRipper.IO.Files.SerializedFiles;
 using AssetRipper.Yaml;
 
@@ -20,7 +21,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 			Fields = new SerializableField[type.FieldCount];
 		}
 
-		public void Read(ref EndianSpanReader reader, UnityVersion version, TransferInstructionFlags flags)
+		public void Read(ref EndianReader reader, UnityVersion version, TransferInstructionFlags flags)
 		{
 			for (int i = 0; i < Fields.Length; i++)
 			{
@@ -106,7 +107,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 			return true;
 		}
 
-		public bool TryRead(ref EndianSpanReader reader, UnityVersion version, TransferInstructionFlags flags)
+		public bool TryRead(ref EndianReader reader, UnityVersion version, TransferInstructionFlags flags)
 		{
 			try
 			{
@@ -119,7 +120,7 @@ namespace AssetRipper.Import.Structure.Assembly.Serializable
 			}
 			if (reader.Position != reader.Length)
 			{
-				LogMonoBehaviourMismatch(this, reader.Position, reader.Length);
+				LogMonoBehaviourMismatch(this, (int)reader.Position, (int)reader.Length);
 				return false;
 			}
 			return true;

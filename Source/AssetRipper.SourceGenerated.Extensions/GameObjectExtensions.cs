@@ -271,11 +271,19 @@ namespace AssetRipper.SourceGenerated.Extensions
 				this.referenceList = referenceList;
 			}
 
-			public override IPPtr_Component this[int index] { get => referenceList[index].Component; set => referenceList[index].Component.CopyValues(value.ToStruct()); }
+            public override IPPtr_Component this[int index]
+            {
+                get => referenceList[index].Component;
+                set => referenceList[index].Component.CopyValues(value.ToStruct());
+            }
 
 			public override int Count => referenceList.Count;
 
-			public override int Capacity { get => referenceList.Capacity; set => referenceList.Capacity = value; }
+            public override int Capacity
+            {
+                get => referenceList.Capacity;
+                set => referenceList.Capacity = value;
+            }
 
 			public override void Add(IPPtr_Component item)
 			{
@@ -356,7 +364,11 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 			public override int Count => referenceList.Count;
 
-			public override int Capacity { get => referenceList.Capacity; set => referenceList.Capacity = value; }
+            public override int Capacity
+            {
+                get => referenceList.Capacity;
+                set => referenceList.Capacity = value;
+            }
 
 			public override void Add(IPPtr_Component item)
 			{

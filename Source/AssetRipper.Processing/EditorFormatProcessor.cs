@@ -6,6 +6,7 @@ using AssetRipper.Assets.Interfaces;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.Import.Configuration;
 using AssetRipper.Import.Logging;
+using AssetRipper.Import.Utils;
 using AssetRipper.IO.Files.SerializedFiles;
 using AssetRipper.Processing.AnimationClips;
 using AssetRipper.SourceGenerated.Classes.ClassID_1;

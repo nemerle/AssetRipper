@@ -1,13 +1,15 @@
 ﻿using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.IO.Reading;
 using AssetRipper.Assets.IO.Writing;
+using AssetRipper.Import.Utils;
+using AssetRipper.IO;
 using K4os.Compression.LZ4;
 
 namespace AssetRipper.Export.Modules.Shaders.ShaderBlob
 {
 	public sealed class ShaderSubProgramBlob
 	{
-		public void Read(AssetCollection shaderCollection, byte[] compressedBlob, uint[] offsets, uint[] compressedLengths, uint[] decompressedLengths)
+		public void Read(AssetCollection shaderCollection, MemoryAreaAccessor compressedBlob, uint[] offsets, uint[] compressedLengths, uint[] decompressedLengths)
 		{
 			for (int i = 0; i < offsets.Length; i++)
 			{
@@ -19,13 +21,15 @@ namespace AssetRipper.Export.Modules.Shaders.ShaderBlob
 			}
 		}
 
-		private void ReadBlob(AssetCollection shaderCollection, byte[] compressedBlob, uint offset, uint compressedLength, uint decompressedLength, int segment)
+		private void ReadBlob(AssetCollection shaderCollection, MemoryAreaAccessor compressedBlob, uint offset, uint compressedLength, uint decompressedLength, int segment)
 		{
-			byte[] decompressedBuffer = new byte[decompressedLength];
-			LZ4Codec.Decode(compressedBlob, (int)offset, (int)compressedLength, decompressedBuffer, 0, (int)decompressedLength);
+			MemoryAreaAccessor decompressedBuffer = new MemoryAreaAccessor(decompressedLength);
+			unsafe
+			{
+					LZ4Codec.Decode(compressedBlob.GetBaseMemory()+(int)offset, (int)compressedLength, decompressedBuffer.GetBaseMemory(), (int)decompressedLength);
+			}
 
-			using MemoryStream blobMem = new MemoryStream(decompressedBuffer);
-			using AssetReader blobReader = new AssetReader(blobMem, shaderCollection);
+			AssetReader blobReader = new AssetReader(decompressedBuffer, shaderCollection);
 			if (segment == 0)
 			{
 				Entries = ReadAssetArray(blobReader);
@@ -41,11 +45,11 @@ namespace AssetRipper.Export.Modules.Shaders.ShaderBlob
 				ShaderSubProgramEntry entry = Entries[i];
 				if (entry.Segment == segment)
 				{
-					reader.BaseStream.Position = entry.Offset;
+					reader.Accessor.Position = entry.Offset;
 					SubPrograms[i].Read(reader);
-					if (reader.BaseStream.Position != entry.Offset + entry.Length)
+					if (reader.Position != entry.Offset + entry.Length)
 					{
-						throw new Exception($"Read {reader.BaseStream.Position - entry.Offset} less than expected {entry.Length}");
+						throw new Exception($"Read {reader.Position - entry.Offset} less than expected {entry.Length}");
 					}
 				}
 			}

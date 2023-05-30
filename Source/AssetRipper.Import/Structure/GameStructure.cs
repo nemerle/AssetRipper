@@ -9,6 +9,7 @@ using AssetRipper.Import.Structure.Platforms;
 using AssetRipper.IO.Files;
 using AssetRipper.IO.Files.ResourceFiles;
 using AssetRipper.IO.Files.SerializedFiles.Parser;
+using AssetRipper.IO.Files.Streams.MultiFile;
 using AssetRipper.IO.Files.Utils;
 
 namespace AssetRipper.Import.Structure
@@ -149,8 +150,10 @@ namespace AssetRipper.Import.Structure
 			ResourceFile? resFile = FileCollection.ResolveResource(assemblyName);
 			if (resFile is not null)
 			{
-				resFile.Stream.Position = 0;
-				AssemblyManager.Read(resFile.Stream, assemblyName);
+                var subaccessor = resFile.MemoryView.CreateSubAccessor();
+                subaccessor.Position = 0;
+                var str = subaccessor.ToStream();
+                AssemblyManager.Read(str, assemblyName);
 			}
 			else
 			{
@@ -257,7 +260,8 @@ namespace AssetRipper.Import.Structure
 					return null;
 				}
 
-				ResourceFile resourceFile = new ResourceFile(resPath, fixedName);
+                var ms = MultiFileStream.OpenReadSingle(resPath);
+                ResourceFile resourceFile = new ResourceFile(ms.CreateAccessor(), resPath, fixedName);
 				Logger.Info(LogCategory.Import, $"Resource file '{resName}' has been loaded");
 				return resourceFile;
 			}

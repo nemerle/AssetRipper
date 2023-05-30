@@ -1,4 +1,5 @@
-﻿using AssetRipper.SourceGenerated.Subclasses.PackedBitVector_Single;
+﻿using AssetRipper.IO;
+using AssetRipper.SourceGenerated.Subclasses.PackedBitVector_Single;
 using System.Runtime.InteropServices;
 
 namespace AssetRipper.SourceGenerated.Extensions
@@ -12,7 +13,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			instance.NumItems = source.NumItems;
 			instance.Range = source.Range;
 			instance.Start = source.Start;
-			instance.Data = source.Data.ToArray();
+			instance.Data = source.Data.CopyDeep();
 			instance.BitSize = source.BitSize;
 		}
 
@@ -29,6 +30,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			float scale = 1.0f / packedVector.Range;
 			float halfMaxValue = scale * ((1 << packedVector.BitSize) - 1);
 			float[] buffer = new float[chunkCount];
+			var src = packedVector.Data.CleanSpan();
 
 			for (int i = 0; i < chunkCount; i++)
 			{
@@ -36,7 +38,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 				int bits = 0;
 				while (bits < packedVector.BitSize)
 				{
-					value |= packedVector.Data[byteIndex] >> bitIndex << bits;
+					value |= src[byteIndex] >> bitIndex << bits;
 					int num = Math.Min(packedVector.BitSize - bits, 8 - bitIndex);
 					bitIndex += num;
 					bits += num;
@@ -76,6 +78,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 			int end = chunkStride * numChunks / 4;
 			List<float> data = new List<float>();
+			var src = packedVector.Data.CleanSpan();
 			for (int index = 0; index != end; index += chunkStride / 4)
 			{
 				for (int i = 0; i < itemCountInChunk; ++i)
@@ -85,7 +88,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 					int bits = 0;
 					while (bits < packedVector.BitSize)
 					{
-						x |= unchecked((uint)(packedVector.Data[byteIndex] >> bitIndex << bits));
+						x |= unchecked((uint)(src[byteIndex] >> bitIndex << bits));
 						int read = Math.Min(packedVector.BitSize - bits, 8 - bitIndex);
 						bitIndex += read;
 						bits += read;
@@ -169,7 +172,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			packedVector.Start = minf;
 			packedVector.NumItems = (uint)data.Length;
 			packedVector.BitSize = (byte)bitSize;
-			packedVector.Data = new byte[(packedVector.NumItems * bitSize + 7) / 8];
+			packedVector.Data = new MemoryAreaAccessor((packedVector.NumItems * bitSize + 7) / 8);
 
 
 			double scale = 1.0d / packedVector.Range;
@@ -177,6 +180,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int bitIndex = 0;
 			int byteIndex = 0;
 
+			var dst = packedVector.Data.WriteableSpan();
 			for (int i = 0; i < data.Length; ++i)
 			{
 				double scaled = (data[i] - packedVector.Start) * scale;
@@ -196,7 +200,7 @@ namespace AssetRipper.SourceGenerated.Extensions
 				int bits = 0;
 				while (bits < packedVector.BitSize)
 				{
-					packedVector.Data[byteIndex] |= unchecked((byte)(x >> bits << bitIndex));
+					dst[byteIndex] |= unchecked((byte)(x >> bits << bitIndex));
 					int read = Math.Min(packedVector.BitSize - bits, 8 - bitIndex);
 					bitIndex += read;
 					bits += read;

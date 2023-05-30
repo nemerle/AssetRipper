@@ -1,6 +1,7 @@
 ﻿using AssetRipper.Assets.Collections;
 using AssetRipper.Assets.Generics;
 using AssetRipper.Assets.IO.Reading;
+using AssetRipper.IO;
 using AssetRipper.SourceGenerated.Classes.ClassID_43;
 using AssetRipper.SourceGenerated.Enums;
 using AssetRipper.SourceGenerated.Extensions;
@@ -65,11 +66,11 @@ namespace AssetRipper.SourceGenerated.Extensions
 
 			if (is16bits)
 			{
-				FindMinMax16Indices(mesh.IndexBuffer_C43, (int)submesh.FirstByte, (int)submesh.IndexCount, out min, out max);
+				FindMinMax16Indices(mesh.IndexBuffer_C43.CloneClean(), (int)submesh.FirstByte, (int)submesh.IndexCount, out min, out max);
 			}
 			else
 			{
-				FindMinMax32Indices(mesh.IndexBuffer_C43, (int)submesh.FirstByte, (int)submesh.IndexCount, out min, out max);
+				FindMinMax32Indices(mesh.IndexBuffer_C43.CloneClean(), (int)submesh.FirstByte, (int)submesh.IndexCount, out min, out max);
 			}
 		}
 
@@ -92,14 +93,16 @@ namespace AssetRipper.SourceGenerated.Extensions
 			}
 		}
 
-		private static void FindMinMax16Indices(byte[] indexBuffer, int offset, int indexCount, out int min, out int max)
+		private static void FindMinMax16Indices(MemoryAreaAccessor indexBuffer, int offset, int indexCount, out int min, out int max)
 		{
-			min = BitConverter.ToUInt16(indexBuffer, offset);
-			max = BitConverter.ToUInt16(indexBuffer, offset);
+			indexBuffer.Position = offset;
+			min = indexBuffer.Read<ushort>();
+			max = min;
+			indexBuffer.Position = offset;
 			int end = offset + indexCount * sizeof(ushort);
 			for (int i = offset; i < end; i += sizeof(ushort))
 			{
-				int index = BitConverter.ToUInt16(indexBuffer, i);
+				int index = indexBuffer.Read<ushort>();
 				if (index > max)
 				{
 					max = index;
@@ -111,14 +114,16 @@ namespace AssetRipper.SourceGenerated.Extensions
 			}
 		}
 
-		private static void FindMinMax32Indices(byte[] indexBuffer, int offset, int indexCount, out int min, out int max)
+		private static void FindMinMax32Indices(MemoryAreaAccessor indexBuffer, int offset, int indexCount, out int min, out int max)
 		{
-			min = BitConverter.ToInt32(indexBuffer, offset);
-			max = BitConverter.ToInt32(indexBuffer, offset);
+			indexBuffer.Position = offset;
+			min = indexBuffer.Read<int>();
+			max = min;
+			indexBuffer.Position = offset;
 			int end = offset + indexCount * sizeof(int);
 			for (int i = offset; i < end; i += sizeof(int))
 			{
-				int index = BitConverter.ToInt32(indexBuffer, i);
+				int index = indexBuffer.Read<int>();
 				if (index > max)
 				{
 					max = index;
@@ -253,8 +258,8 @@ namespace AssetRipper.SourceGenerated.Extensions
 			int extraStride = streamStride - ShaderChannel.Vertex.GetStride(meshCollection.Version);
 			int vertexOffset = firstVertex * streamStride;
 			int begin = streamOffset + vertexOffset + channel.Offset;
-			using MemoryStream stream = new MemoryStream(vertexData.Data);
-			using AssetReader reader = new AssetReader(stream, meshCollection);
+			var stream = vertexData.Data.CloneClean();
+			AssetReader reader = new AssetReader(stream, meshCollection);
 			stream.Position = begin;
 			Vector3 dummyVertex = reader.ReadVector3();
 			min = dummyVertex;

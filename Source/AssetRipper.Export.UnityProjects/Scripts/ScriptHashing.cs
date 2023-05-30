@@ -1,4 +1,6 @@
 ﻿using AssetRipper.HashAlgorithms;
+using AssetRipper.Import.Utils;
+using AssetRipper.IO;
 using System.Buffers.Binary;
 using System.Text;
 
@@ -58,4 +60,22 @@ public static class ScriptHashing
 
 		return BinaryPrimitives.ReadInt32LittleEndian(destination);
 	}
+
+    public static int CalculateScriptFileID(MemoryAreaAccessor @namespace, MemoryAreaAccessor name)
+    {
+        Span<byte> source = stackalloc byte[(int)(4 + @namespace.Length + name.Length)];
+
+        source[0] = (byte)'s';
+        source[1] = 0;
+        source[2] = 0;
+        source[3] = 0;
+
+        @namespace.CopyTo(source[4..]);
+        name.CopyTo(source[(int)(4 + @namespace.Length)..]);
+
+        Span<byte> destination = stackalloc byte[16];
+        MD4.HashData(source, destination);
+
+        return BinaryPrimitives.ReadInt32LittleEndian(destination);
+    }
 }

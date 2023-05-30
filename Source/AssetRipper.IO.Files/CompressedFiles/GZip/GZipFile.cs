@@ -9,15 +9,18 @@ namespace AssetRipper.IO.Files.CompressedFiles.GZip
 	{
 		private const ushort GZipMagic = 0x1F8B;
 
-		public override void Read(SmartStream stream)
+		public override void Read(MemoryAreaAccessor stream)
 		{
-			using SmartStream memoryStream = SmartStream.CreateMemory();
-			using (GZipStream gzipStream = new GZipStream(stream, CompressionMode.Decompress, true))
+			using MemoryStream memoryStream = new MemoryStream();
+			using (GZipStream gzipStream = new GZipStream(stream.ToStream(), CompressionMode.Decompress, true))
 			{
 				gzipStream.CopyTo(memoryStream);
 			}
 			memoryStream.Position = 0;
-			UncompressedFile = new ResourceFile(memoryStream, FilePath, Name);
+			var maa = new MemoryAreaAccessor(memoryStream.Length);
+			
+			memoryStream.CopyTo(maa.ToStream());
+			UncompressedFile = new ResourceFile(maa, FilePath, Name);
 		}
 
 		public override void Write(Stream stream)
@@ -31,15 +34,15 @@ namespace AssetRipper.IO.Files.CompressedFiles.GZip
 
 		internal static bool IsGZipFile(EndianReader reader)
 		{
-			long position = reader.BaseStream.Position;
+			long position = reader.Accessor.Position;
 			ushort gzipMagic = ReadGZipMagic(reader);
-			reader.BaseStream.Position = position;
+			reader.Accessor.Position = position;
 			return gzipMagic == GZipMagic;
 		}
 
 		private static ushort ReadGZipMagic(EndianReader reader)
 		{
-			long remaining = reader.BaseStream.Length - reader.BaseStream.Position;
+			long remaining = reader.Accessor.Length - reader.Accessor.Position;
 			if (remaining >= sizeof(ushort))
 			{
 				return reader.ReadUInt16();

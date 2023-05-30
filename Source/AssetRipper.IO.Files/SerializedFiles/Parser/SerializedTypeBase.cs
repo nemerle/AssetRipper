@@ -74,9 +74,9 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser
 					|| (!IgnoreScriptTypeForHash(reader.Generation, reader.Version) && ScriptTypeIndex >= 0);
 				if (readScriptID)
 				{
-					ScriptID = reader.ReadBytes(16);//actually read as 4 uint
+					ScriptID = reader.Accessor.ReadBytes(16).ToArray();//actually read as 4 uint
 				}
-				OldTypeHash = reader.ReadBytes(16);//actually read as 4 uint
+				OldTypeHash = reader.Accessor.ReadBytes(16).ToArray();//actually read as 4 uint
 			}
 
 			if (hasTypeTree)

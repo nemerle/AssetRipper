@@ -25,13 +25,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="AssetRipper.SourceGenerated">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>../Libraries/AssetRipper.SourceGenerated.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\AssetRipper.Export.Modules.Audio\AssetRipper.Export.Modules.Audio.csproj" />
 		<ProjectReference Include="..\AssetRipper.Export.Modules.Shader\AssetRipper.Export.Modules.Shaders.csproj" />
 		<ProjectReference Include="..\AssetRipper.Export.Modules.Textures\AssetRipper.Export.Modules.Textures.csproj" />

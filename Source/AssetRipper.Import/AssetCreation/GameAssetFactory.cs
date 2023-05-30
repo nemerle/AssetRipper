@@ -1,8 +1,6 @@
 ﻿using AssetRipper.Assets;
-using AssetRipper.Assets.Generics;
 using AssetRipper.Assets.Interfaces;
 using AssetRipper.Assets.IO;
-using AssetRipper.Assets.IO.Reading;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.Import.Logging;
 using AssetRipper.Import.Structure.Assembly.Managers;
@@ -10,6 +8,7 @@ using AssetRipper.Import.Structure.Assembly.Mono;
 using AssetRipper.Import.Structure.Assembly.Serializable;
 using AssetRipper.Import.Structure.Assembly.TypeTrees;
 using AssetRipper.IO.Endian;
+using AssetRipper.IO;
 using AssetRipper.IO.Files.SerializedFiles.Parser;
 using AssetRipper.IO.Files.SerializedFiles.Parser.TypeTrees;
 using AssetRipper.SourceGenerated;
@@ -45,27 +44,26 @@ namespace AssetRipper.Import.AssetCreation
 
 		private IAssemblyManager AssemblyManager { get; }
 
-		public override IUnityObjectBase? ReadAsset(AssetInfo assetInfo, ReadOnlyArraySegment<byte> assetData, SerializedType? assetType)
+        public override IUnityObjectBase? ReadAsset(AssetInfo assetInfo, MemoryAreaAccessor assetData, SerializedType? assetType)
 		{
 			IUnityObjectBase? asset = AssetFactory.CreateAsset(assetInfo.Collection.Version, assetInfo);
 			return asset switch
 			{
-				null => new UnknownObject(assetInfo, assetData.ToArray()),
+                null => new UnknownObject(assetInfo, assetData),
 				IMonoBehaviour monoBehaviour => ReadMonoBehaviour(monoBehaviour, assetData, AssemblyManager, assetType),
 				_ => ReadNormalObject(asset, assetData)
 			};
 		}
 
-		private static IMonoBehaviour? ReadMonoBehaviour(IMonoBehaviour monoBehaviour, ReadOnlyArraySegment<byte> assetData, IAssemblyManager assemblyManager, SerializedType? type)
+        private static IMonoBehaviour ReadMonoBehaviour(IMonoBehaviour monoBehaviour, MemoryAreaAccessor assetData, IAssemblyManager assemblyManager, SerializedType? type)
 		{
-			EndianSpanReader reader = new EndianSpanReader(assetData, monoBehaviour.Collection.EndianType);
+            EndianReader reader = new EndianReader(assetData, monoBehaviour.Collection.EndianType);
 			try
 			{
 				monoBehaviour.Read(ref reader);
-				SerializableStructure? structure;
 				if (type is not null && TypeTreeNodeStruct.TryMakeFromTypeTree(type.OldType, out TypeTreeNodeStruct rootNode))
 				{
-					structure = SerializableTreeType.FromRootNode(rootNode).CreateSerializableStructure();
+                    var structure = SerializableTreeType.FromRootNode(rootNode).CreateSerializableStructure();
 					if (structure.TryRead(ref reader, monoBehaviour.Collection.Version, monoBehaviour.Collection.Flags))
 					{
 						monoBehaviour.Structure = structure;
@@ -77,7 +75,7 @@ namespace AssetRipper.Import.AssetCreation
 				}
 				else
 				{
-					monoBehaviour.Structure = new UnloadedStructure(monoBehaviour, assemblyManager, assetData.Slice(reader.Position));
+                    monoBehaviour.Structure = new UnloadedStructure(monoBehaviour, assemblyManager, assetData.CreateSubAccessor());
 				}
 			}
 			catch (Exception ex)
@@ -87,17 +85,19 @@ namespace AssetRipper.Import.AssetCreation
 			return monoBehaviour;
 		}
 
-		private static IUnityObjectBase ReadNormalObject(IUnityObjectBase asset, ReadOnlyArraySegment<byte> assetData)
+        private static IUnityObjectBase ReadNormalObject(IUnityObjectBase asset, MemoryAreaAccessor assetData)
 		{
-			EndianSpanReader reader = new EndianSpanReader(assetData, asset.Collection.EndianType);
+            EndianReader reader = new EndianReader(assetData, asset.Collection.EndianType);
 			bool replaceWithUnreadableObject;
 			try
 			{
 				asset.Read(ref reader);
-				if (reader.Position != reader.Length)
+                var aligned_length = (reader.Accessor.Length + 3) & ~3;
+                var aligned_position = (reader.Accessor.Position + 3) & ~3;
+                if (reader.Accessor.Position != reader.Accessor.Length && aligned_length != aligned_position)
 				{
 					//Some Chinese Unity versions have extra fields appended to the global type trees.
-					if (reader.Length - reader.Position == 24 && asset is ITexture2D texture)
+                    if (reader.Accessor.Length - reader.Accessor.Position == 24 && asset is ITexture2D texture)
 					{
 						ReadExtraTextureFields(texture, ref reader);
 						replaceWithUnreadableObject = false;
@@ -120,7 +120,7 @@ namespace AssetRipper.Import.AssetCreation
 			}
 			if (replaceWithUnreadableObject)
 			{
-				UnreadableObject unreadable = new UnreadableObject(asset.AssetInfo, assetData.ToArray());
+                UnreadableObject unreadable = new UnreadableObject(asset.AssetInfo, assetData);
 				unreadable.NameString = (asset as IHasNameString)?.NameString ?? "";
 				return unreadable;
 			}
@@ -130,7 +130,7 @@ namespace AssetRipper.Import.AssetCreation
 			}
 		}
 
-		private static void LogIncorrectNumberOfBytesRead(IUnityObjectBase asset, ref EndianSpanReader reader)
+        private static void LogIncorrectNumberOfBytesRead(IUnityObjectBase asset, ref EndianReader reader)
 		{
 			Logger.Error($"Read {reader.Position} but expected {reader.Length} for asset type {(ClassIDType)asset.ClassID}. V: {asset.Collection.Version} P: {asset.Collection.Platform} N: {asset.Collection.Name} Path: {asset.Collection.FilePath}");
 		}
@@ -139,7 +139,7 @@ namespace AssetRipper.Import.AssetCreation
 		/// A special case for Chinese textures containing an extra 24 bytes at the end.
 		/// </summary>
 		/// <param name="reader"></param>
-		private static void ReadExtraTextureFields(ITexture2D texture, ref EndianSpanReader reader)
+        private static void ReadExtraTextureFields(ITexture2D texture, ref EndianReader reader)
 		{
 			//int m_OriginalWidth // ByteSize{4}, Index{26}, Version{1}, IsArray{0}, MetaFlag{10}
 			//int m_OriginalHeight // ByteSize{4}, Index{27}, Version{1}, IsArray{0}, MetaFlag{10}

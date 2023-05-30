@@ -4,17 +4,18 @@ using AssetRipper.Assets.Generics;
 using AssetRipper.Assets.IO;
 using AssetRipper.Assets.Metadata;
 using AssetRipper.IO.Endian;
+using AssetRipper.IO;
 using AssetRipper.IO.Files.SerializedFiles.Parser;
 
 namespace AssetRipper.Tools.JsonSerializer;
 
 public sealed class JsonAssetFactory : AssetFactoryBase
 {
-	public override IUnityObjectBase? ReadAsset(AssetInfo assetInfo, ReadOnlyArraySegment<byte> assetData, SerializedType? assetType)
+	public override IUnityObjectBase? ReadAsset(AssetInfo assetInfo, MemoryAreaAccessor assetData, SerializedType? assetType)
 	{
 		if (assetType?.OldType.Nodes.Count > 0)
 		{
-			EndianSpanReader reader = new EndianSpanReader(assetData, assetInfo.Collection.EndianType);
+			EndianReader reader = new EndianReader(assetData, assetInfo.Collection.EndianType);
 			SerializableEntry entry = SerializableEntry.FromTypeTree(assetType.OldType);
 			JsonAsset asset = new JsonAsset(assetInfo);
 			asset.Read(ref reader, entry);

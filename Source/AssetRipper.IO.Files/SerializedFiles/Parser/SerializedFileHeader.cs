@@ -45,10 +45,10 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser
 
 		public static bool IsSerializedFileHeader(EndianReader reader, long fileSize)
 		{
-			long initialPosition = reader.BaseStream.Position;
+			long initialPosition = reader.Accessor.Position;
 
 			//Sanity check that there is enough room here first.
-			if (reader.BaseStream.Position + HeaderMinSize > reader.BaseStream.Length)
+			if (reader.Accessor.Position + HeaderMinSize > reader.Accessor.Length)
 			{
 				return false;
 			}
@@ -65,40 +65,40 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser
 			int generation = reader.ReadInt32();
 			if (!Enum.IsDefined(typeof(FormatVersion), generation))
 			{
-				reader.BaseStream.Position = initialPosition;
+				reader.Accessor.Position = initialPosition;
 				return false;
 			}
 
-			reader.BaseStream.Position = initialPosition;
+			reader.Accessor.Position = initialPosition;
 			if (generation >= 22)
 			{
 				//22 Format:
 				//First known value is at 0x14, and is metadata size as a 32-bit integer.
 				//Then the file size as a 64-bit integer.
-				reader.BaseStream.Position = initialPosition + 0x14;
+				reader.Accessor.Position = initialPosition + 0x14;
 				metadataSize = reader.ReadInt32();
 				headerDefinedFileSize = reader.ReadUInt64();
 			}
 
 			if (metadataSize < MetadataMinSize)
 			{
-				reader.BaseStream.Position = initialPosition;
+				reader.Accessor.Position = initialPosition;
 				return false;
 			}
 
 			if (headerDefinedFileSize < HeaderMinSize + MetadataMinSize)
 			{
-				reader.BaseStream.Position = initialPosition;
+				reader.Accessor.Position = initialPosition;
 				return false;
 			}
 
 			if (fileSize < 0 || headerDefinedFileSize != (ulong)fileSize)
 			{
-				reader.BaseStream.Position = initialPosition;
+				reader.Accessor.Position = initialPosition;
 				return false;
 			}
 
-			reader.BaseStream.Position = initialPosition;
+			reader.Accessor.Position = initialPosition;
 			return true;
 		}
 

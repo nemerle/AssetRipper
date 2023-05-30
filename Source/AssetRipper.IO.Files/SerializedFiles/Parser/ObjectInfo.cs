@@ -140,14 +140,12 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser
 			{
 				return types[SerializedTypeIndex];
 			}
-			else if (types.Length == 0)
+            if (types.Length == 0)
 			{
 				return default; //It's common on Unity 4 and lower for the array to be empty.
 			}
-			else
-			{
-				return types.Single(t => t.TypeID == TypeID && t.IsStrippedType == Stripped);
-			}
+
+            return types.SingleOrDefault(t => t.TypeID == TypeID && t.IsStrippedType == Stripped);
 		}
 
 		public void Initialize(SerializedType[] types)
@@ -198,6 +196,6 @@ namespace AssetRipper.IO.Files.SerializedFiles.Parser
 		/// <summary>
 		/// The data referenced by <see cref="ByteStart"/> and <see cref="ByteSize"/>.
 		/// </summary>
-		public byte[] ObjectData { get; set; } = Array.Empty<byte>();
+        public MemoryAreaAccessor ObjectData { get; set; } = MemoryAreaAccessor.Empty;
 	}
 }

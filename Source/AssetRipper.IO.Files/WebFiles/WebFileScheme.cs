@@ -5,9 +5,9 @@ namespace AssetRipper.IO.Files.WebFiles
 {
 	public sealed class WebFileScheme : Scheme<WebFile>
 	{
-		public override bool CanRead(SmartStream stream)
+		public override bool CanRead(MemoryAreaAccessor stream)
 		{
-			using EndianReader reader = new EndianReader(stream, EndianType.LittleEndian);
+			var reader = new EndianReader(stream, EndianType.LittleEndian);
 			return WebFile.IsWebFile(reader);
 		}
 	}

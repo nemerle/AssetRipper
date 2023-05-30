@@ -12,9 +12,9 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb
 		public THeader Header { get; } = new();
 		public DirectoryInfo<RawWebNode>? DirectoryInfo { get; set; } = new();
 
-		public override void Read(SmartStream stream)
+		public override void Read(MemoryAreaAccessor stream)
 		{
-			EndianReader reader = new EndianReader(stream, EndianType.BigEndian);
+			EndianReader reader = new(stream, EndianType.BigEndian);
 			long basePosition = stream.Position;
 			Header.Read(reader);
 			long headerSize = stream.Position - basePosition;
@@ -22,7 +22,7 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb
 			{
 				throw new Exception($"Read {headerSize} but expected {Header.HeaderSize} bytes while reading the raw/web bundle header.");
 			}
-			ReadRawWebMetadata(stream, out Stream dataStream, out long metadataOffset);//ReadBlocksAndDirectory
+			ReadRawWebMetadata(stream, out MemoryAreaAccessor dataStream, out long metadataOffset);//ReadBlocksAndDirectory
 			ReadRawWebData(dataStream, metadataOffset);//also ReadBlocksAndDirectory
 		}
 
@@ -33,7 +33,7 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb
 			throw new NotImplementedException();
 		}
 
-		private void ReadRawWebMetadata(Stream stream, out Stream dataStream, out long metadataOffset)
+		private void ReadRawWebMetadata(MemoryAreaAccessor stream, out MemoryAreaAccessor dataStream, out long metadataOffset)
 		{
 			int metadataSize = RawWebBundleHeader.HasUncompressedBlocksInfoSize(Header.Version) ? Header.UncompressedBlocksInfoSize : 0;
 
@@ -48,7 +48,8 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb
 			{
 				// read only last chunk
 				BundleScene chunkInfo = Header.Scenes[^1];
-				dataStream = new MemoryStream(new byte[chunkInfo.DecompressedSize]);
+				MemoryMappedFileWrapper file = new(chunkInfo.DecompressedSize);
+				dataStream = file.CreateAccessor();
 				LzmaCompression.DecompressLzmaSizeStream(stream, chunkInfo.CompressedSize, dataStream);
 				metadataOffset = 0;
 
@@ -61,14 +62,12 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb
 			}
 		}
 
-		private void ReadMetadata(Stream stream, int metadataSize)
+		private void ReadMetadata(MemoryAreaAccessor stream, int metadataSize)
 		{
 			long metadataPosition = stream.Position;
-			using (EndianReader reader = new EndianReader(stream, EndianType.BigEndian))
-			{
-				DirectoryInfo = DirectoryInfo<RawWebNode>.Read(reader);
-				reader.AlignStream();
-			}
+			EndianReader reader = new(stream, EndianType.BigEndian);
+			DirectoryInfo = DirectoryInfo<RawWebNode>.Read(reader);
+			reader.AlignStream();
 			if (metadataSize > 0)
 			{
 				if (stream.Position - metadataPosition != metadataSize)
@@ -78,14 +77,18 @@ namespace AssetRipper.IO.Files.BundleFiles.RawWeb
 			}
 		}
 
-		private void ReadRawWebData(Stream stream, long metadataOffset)
+		private void ReadRawWebData(MemoryAreaAccessor memaccess, long metadataOffset)
 		{
+			if (DirectoryInfo == null)
+			{
+				return;
+			}
+			MemoryAreaAccessor baseArea = memaccess.CloneClean();
+			baseArea.Position = metadataOffset;
 			foreach (RawWebNode entry in DirectoryInfo.Nodes)
 			{
-				byte[] buffer = new byte[entry.Size];
-				stream.Position = metadataOffset + entry.Offset;
-				stream.ReadBuffer(buffer, 0, buffer.Length);
-				ResourceFile file = new ResourceFile(buffer, FilePath, entry.Path);
+				MemoryAreaAccessor subAccessor = baseArea.CreateSubAccessor(entry.Offset, entry.Size);
+				ResourceFile file = new(subAccessor, FilePath, entry.Path);
 				AddResourceFile(file);
 			}
 		}
